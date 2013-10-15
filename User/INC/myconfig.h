@@ -3,7 +3,7 @@
 
 #include "stm32f10x.h"
 
-#define	VERL 0x01 		//版本号低位
+#define	VERL 0x02 		//版本号低位
 #define	VERH 0x00			//版本号高位
 
 #define	IWDGSW			//看门狗开关
@@ -20,10 +20,10 @@
 #define		QUEFULL		1
 #define		QUEEMP		2
 #define		QUENOEGH	3
-#define		MAXOFRXQ	256
+#define		MAXOFRXQ	0x200
 
 #define		VBAT_MAX	0x900
-#define		VBAT_MIN	0x600
+#define		VBAT_MIN	0x800
 #define		VBAT_USE	(VBAT_MAX-VBAT_MIN)
 
 #define		COMNFIR	0
@@ -121,10 +121,13 @@ EXT_ u8 RxData1;
 EXT_ u8 RxData2;
 EXT_ u8	RxTmp2[0x20];
 EXT_ u8 Rx2len;
+EXT_ Quque RxQUE2;
 EXT_ Quque RxQUE3;
 EXT_ u16 TxCounter3;
 EXT_ u16 MaxNbrofTx3;
 EXT_ u8 *TxBuffer3;
+
+EXT_ u8 Com3con;
 
 EXT_ u8 Com1first;
 EXT_ u8 Com2first;
@@ -191,9 +194,11 @@ u8 Hex2Bcd(u8 b);
 void UARTsend(u8 ch);
 void USART1send(Quque *q);
 void iRDAsend(u8 ch);
-void USART2send(Quque *q);
-void USART3send(u8 ch);
-void BLsend(u8 *buffer,u16 len);
+void USART2send(void);
+void BLsend(u8 ch);
+void USART3send(void);
+//void USART3send(u8 ch);
+void BLsend1(u8 *buffer,u16 len);
 /*******系统处理解析相关*************/
 
 u8 CheckHE(void);

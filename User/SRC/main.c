@@ -84,8 +84,10 @@ int main(void)
 	Check_Rst();
 #endif
 	Com3first = COMFIR;
+	Com2first = COMFIR;
 	TimingDelay = 0;
 	
+	InitQue(&RxQUE2);
 	InitQue(&RxQUE3);
 	/* Configure the GPIO ports */
 	GPIO_Configuration();
@@ -127,6 +129,7 @@ int main(void)
 			PWR_IR_OFF();
 			time_send = 0;
 			Send_HB();
+//			Com3con = 0;
 		}
 		if(time_sleep>=(W_Time*60))
 		{

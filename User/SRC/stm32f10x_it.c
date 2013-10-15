@@ -168,14 +168,19 @@ void RTC_IRQHandler(void)
 	if (RTC_GetITStatus(RTC_IT_SEC) != RESET)
 	{
 		/* Clear the RTC Second interrupt */
-		RTC_ClearITPendingBit(RTC_IT_SEC);
-		
-		
+		RTC_ClearITPendingBit(RTC_IT_SEC);		
 		/* Wait until last write operation on RTC registers has finished */
 		RTC_WaitForLastTask();
+		if(time_sleep == 0)
+		{
+			W_TimeRe = W_Time*60;
+		}
+		else
+		{
+			W_TimeRe--;
+		}
 		time_sleep ++;
 		time_send ++;
-
 		if(Bat_Low == 1)
 		{
 			RUN_ON();			
@@ -207,11 +212,11 @@ void USART1_IRQHandler(void)
 	{
 		/* Read one byte from the receive data register */
 		RxData1 = USART_ReceiveData(USART1);
-		USART3send(RxData1);
+//		USART3send(RxData1);
 	}  
 	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
 	{   
-		USART2send(&RxQUE3);
+		USART1send(&RxQUE3);
 	}
 	if(USART_GetITStatus(USART1, USART_IT_TC) != RESET)
 	{
@@ -234,19 +239,25 @@ void USART2_IRQHandler(void)
 	{
 		/* Read one byte from the receive data register */
 		RxData2 = USART_ReceiveData(USART2);
+//		UARTsend(RxData2);
 		if(LED2_0)
 		{
 			RxTmp2[Rx2len++] = RxData2;
 		}
 		else
 		{
-			USART3send(RxData2);
+			InsertQue(&RxQUE2,RxData2);
+			if(COMFIR == Com2first)
+			{
+				Com2first = COMTXON;
+				USART_ITConfig(USART3, USART_IT_TXE, ENABLE);		
+			}
 		}		
 	}
 	if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET)
 	{   
+		USART2send();
 		/* Disable the USART2 Transmit interrupt */
-		USART2send(&RxQUE3);
 //		USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
 	}
 	if(USART_GetITStatus(USART2, USART_IT_TC) != RESET)
@@ -254,7 +265,6 @@ void USART2_IRQHandler(void)
 		if(COMFIR == Com3first)
 		{
 			USART_ITConfig(USART2, USART_IT_TC, DISABLE);
-//			PWR_IR_OFF();
 			PWM_Disable();
 		}
 	}
@@ -275,11 +285,11 @@ void USART3_IRQHandler(void)
 		/* Read one byte from the receive data register */
 		InsertQue(&RxQUE3,USART_ReceiveData(USART3));
 		if((COMFIR == Com3first)&&(W_Mode == IRDAMODE)&&(sysread == 1))
-			{
-				Com3first = COMTXON;
-				USART_ITConfig(USART2, USART_IT_TXE, ENABLE);				
-//			USART2send(&RxQUE3);	
-			}
+		{
+			
+			Com3first = COMTXON;
+			USART_ITConfig(USART2, USART_IT_TXE, ENABLE);				
+		}
 		else if((COMFIR == Com3first)&&(W_Mode == UARTMODE)&&(sysread == 1))
 		{
 			Com3first = COMTXON;
@@ -288,13 +298,20 @@ void USART3_IRQHandler(void)
 	}  
 	if(USART_GetITStatus(USART3, USART_IT_TXE) != RESET)
 	{   
+		if(Com3con == 0)
+		{
+			USART3send();
+		}
+		else
+		{
 		/* Write one byte to the transmit data register */
 		USART_SendData(USART3, TxBuffer3[TxCounter3++]); 
 		if(TxCounter3 >= MaxNbrofTx3)
 	    {				
 		    /* Disable the USART1 Transmit interrupt */
 				USART_ITConfig(USART3, USART_IT_TXE, DISABLE);
-	    }  
+	    }
+		}
 	}
 }
 

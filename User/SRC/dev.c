@@ -42,53 +42,52 @@ u8 IsEmpty(Quque *q)
 		return QUESUC;
 	}
 u8 OutQue(Quque *q,u8 *pelem,u16 len)
-	{
+{
 	u16 i;
 	if(IsEmpty(q) == QUEEMP)
-		return QUEEMP;
+	{
+		return QUEEMP;		
+	}
 	if(q->head < q->tail)
-		{
-		if((q->tail-q->head)<len)
+	{
+		if((q->tail - q->head)<len)
 			return QUENOEGH;
 		else
-			{
-			for(i=0;i<len;i++)
-				{
-				pelem[i] = q->elem[q->head + i];
-				}
-			q->head =(q->head+len)%MAXOFRXQ;
-			}
-		}
-	if(q->head > q->tail)
 		{
+			for(i=0;i<len;i++)
+			{
+				pelem[i] = q->elem[q->head + i];
+			}
+			q->head =(q->head+len)%MAXOFRXQ;
+		}
+	}
+	else if(q->head > q->tail)
+	{
 		if((MAXOFRXQ - q->head + q->tail )<len)
 			return QUENOEGH;
-		else
+		else if((MAXOFRXQ - q->head)>len)
+		{			
+			for(i=0;i<len;i++)
 			{
-			if((MAXOFRXQ - q->head)>len)
-				{
-				for(i=0;i<len;i++)
-					{
-					pelem[i] = q->elem[q->head + i];
-					}
-				q->head =(q->head+len)%MAXOFRXQ;
-				}
-			else
-				{
-				for(i=0;i<(MAXOFRXQ-q->head);i++)
-					{
-					pelem[i] = q->elem[q->head + i];
-					}				
-				for(i=(MAXOFRXQ-q->head);i<len;i++ )
-					{
-					pelem[i] = q->elem[(q->head + i)%MAXOFRXQ];
-					}
-				q->head =(q->head+len)%MAXOFRXQ;
-				}
+				pelem[i] = q->elem[q->head + i];
 			}
+			q->head =(q->head+len)%MAXOFRXQ;
 		}
-	return QUESUC;
+		else 
+			{
+				for(i=0;i<(MAXOFRXQ-q->head);i++)
+				{
+					pelem[i] = q->elem[q->head + i];
+				}
+				for(i=(MAXOFRXQ-q->head);i<len;i++ )
+				{
+					pelem[i] = q->elem[(q->head + i)%MAXOFRXQ];
+				}
+				q->head =(q->head+len)%MAXOFRXQ;
+			}
 	}
+	return QUESUC;
+}
 u8 AllOutQue(Quque *q,u8 *pelem)
 	{
 	u16 i;
@@ -137,60 +136,43 @@ u16 NumOfQue(Quque *q)
 * Return         : None
 *******************************************************************************/
 void RCC_Configuration(void)
-	{
-//	ErrorStatus HSEStartUpStatus;
- 
-	/* RCC system reset(for debug purpose) */
-//	RCC_DeInit();
-	
-	/* Enable HSE */
-//	RCC_HSEConfig(RCC_HSE_ON);
-	/* Wait till HSE is ready */
-//	HSEStartUpStatus = RCC_WaitForHSEStartUp();
+{
+
 	//使用内部HSI	
 	/* Enable HSI */
 	RCC_HSICmd(ENABLE);	
 	/* Wait till HSI is ready */
 	while(RCC_GetFlagStatus(RCC_FLAG_HSIRDY) == RESET)
-		{
-		}	
-//	if(HSEStartUpStatus == SUCCESS)									//使用外部HSE
-		{
-		/* Enable Prefetch Buffer */
-		FLASH_PrefetchBufferCmd(FLASH_PrefetchBuffer_Enable);
-		
-		/* Flash 2 wait state */
-		FLASH_SetLatency(FLASH_Latency_2);
-		
-		/* HCLK = SYSCLK */
-		RCC_HCLKConfig(RCC_SYSCLK_Div1); 
-		
-		/* PCLK2 = HCLK */
-		RCC_PCLK2Config(RCC_HCLK_Div1); 
-		
-		/* PCLK1 = HCLK/2 */
-		RCC_PCLK1Config(RCC_HCLK_Div2);
-		
-		/* PLLCLK = 8MHz * 3 = 24 MHz */
-//		RCC_PLLConfig(RCC_PLLSource_PREDIV1, RCC_PLLMul_3);//使用外部HSE
-		
-		RCC_PLLConfig(RCC_PLLSource_HSI_Div2, RCC_PLLMul_6);  //使用内部HSI	
-		/* Enable PLL */ 
-		RCC_PLLCmd(ENABLE);
-		
-		/* Wait till PLL is ready */
-		while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET)
-			{
-			}
-		
-		/* Select PLL as system clock source */
-		RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
-		
-		/* Wait till PLL is used as system clock source */
-		while(RCC_GetSYSCLKSource() != 0x08)
-			{
-			}
-		}
+	{}	
+	/* Enable Prefetch Buffer */
+	FLASH_PrefetchBufferCmd(FLASH_PrefetchBuffer_Enable);
+	
+	/* Flash 2 wait state */
+	FLASH_SetLatency(FLASH_Latency_2);
+	
+	/* HCLK = SYSCLK */
+	RCC_HCLKConfig(RCC_SYSCLK_Div1); 
+	
+	/* PCLK2 = HCLK */
+	RCC_PCLK2Config(RCC_HCLK_Div1); 
+	
+	/* PCLK1 = HCLK/2 */
+	RCC_PCLK1Config(RCC_HCLK_Div2);
+
+	RCC_PLLConfig(RCC_PLLSource_HSI_Div2, RCC_PLLMul_6);  //使用内部HSI	
+	/* Enable PLL */ 
+	RCC_PLLCmd(ENABLE);
+	
+	/* Wait till PLL is ready */
+	while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET)
+	{}
+	
+	/* Select PLL as system clock source */
+	RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+	
+	/* Wait till PLL is used as system clock source */
+	while(RCC_GetSYSCLKSource() != 0x08)
+	{}
 	/* Enable PWR and BKP clock */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
   /* Enable write access to Backup domain */
@@ -516,7 +498,7 @@ void USART_Configuration(void)
 	    - Hardware flow control disabled (RTS and CTS signals)
 	    - Receive and transmit enabled
 	*/
-	USART_InitStructure.USART_BaudRate = 9600;
+	USART_InitStructure.USART_BaudRate = 38400;
 	USART_InitStructure.USART_WordLength = USART_WordLength_9b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -639,13 +621,10 @@ void USART1send(Quque *q)
 }
 void iRDAsend(u8 ch)
 {
-//	PWR_IR_ON();
-//	PWM_Enable();
 	USART_SendData(USART2, ch);
-//	while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
-//	PWM_Disable();
 }
-void USART2send(Quque *q)
+
+void USART2send(void)
 {
 	u8 ch,i;
 	if(COMTXON == Com3first)
@@ -664,27 +643,49 @@ void USART2send(Quque *q)
 	else
 	{
 		USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
-//		USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
-		InitQue(&RxQUE3);
 		Com3first = COMFIR;
 		time_send = 0;
 		time_sleep = 0;		
 	}
 }
-void USART3send(u8 ch)
+
+void BLsend(u8 ch)
 	{
-//	USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
   USART_SendData(USART3, ch);
-	while(USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET);			
 	}
-void BLsend(u8 *buffer,u16 len)
+void USART3send(void)
 {
+	u8 ch,i;
+	if(COMTXON == Com2first)
+	{
+		Com2first = COMNFIR;
+		USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
+	}
+	i = OutQue(&RxQUE2,&ch,1);
+	if(i == QUESUC)
+	{		
+		BLsend(ch);
+	}		
+	else
+	{
+		USART_ITConfig(USART3, USART_IT_TXE, DISABLE);
+//		InitQue(&RxQUE2);
+		Com2first = COMFIR;
+	}
+}
+
+void BLsend1(u8 *buffer,u16 len)
+{
+	Com3con = 1;
 	TxCounter3 = 0;
 	MaxNbrofTx3 = len;
 	TxBuffer3 = buffer;
 	USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
 	while(TxCounter3 != MaxNbrofTx3);
-	USART_ITConfig(USART3, USART_IT_TXE, DISABLE);
+	Com3con = 0;
+	InitQue(&RxQUE2);
+	InitQue(&RxQUE3);
+	Com2first = COMFIR;
 }
 /*******************************************************************************
 * Function Name  : TIM_Configuration
@@ -785,6 +786,12 @@ void Check_Rst(void)
 		{
 			PowerDown();
 		}
+	}
+	else
+	{
+		/* Clear reset flags */
+    RCC_ClearFlag();
+		IWDG_Configuration();		
 	}
 }
 

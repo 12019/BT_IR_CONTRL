@@ -2,6 +2,8 @@
 #include    <stdio.h>
 #include    <string.h>
 
+
+
 /*************数据头尾及校验*****************/
 u8 CheckHE(void)
 {
@@ -129,6 +131,7 @@ void Set_Sys(void)
 		}		
 		HB_Time = RxTmp[7];		
 		W_Time = RxTmp[8];		
+		time_sleep = 0;
 		if((RxTmp[1]>11)&&((RxTmp[2]&0x02) == 0x02)&&(W_Mode == BLMODE))
 		{
 			for(i=0;i<4;i++)
@@ -175,7 +178,7 @@ u8 Set_BL(u8 *pBuffer)
   do
   {  
     timeout++;
-		BLsend(buffer,length);
+		BLsend1(buffer,length);
 		Delay(500);
 		AllOutQue(&RxQUE3,buffer);
     if(strstr((char *)buffer,"OK")>0)
@@ -203,7 +206,7 @@ void Send_req(u8 com)
 		{
 			if(i<4) {req[4] += req[i];}
 		}
-		BLsend(req,0x06);
+		BLsend1(req,0x06);
 	}
 	if(com == iRDA)
 	{
@@ -220,28 +223,36 @@ void Send_req(u8 com)
 
 void Send_HB(void)
 {
-	/**********0xA9 L    C    AFN  HB   MODE BADUE PAR TIME TIMEH TIMEL POWL POWH VER  CS 0x16*/
-	u8 HB[] = {0xA9,0x10,0x80,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  0x00,0x00,0x00,0x00,0x16};
+	/********** 0xA9 L    C    AFN  HB   MODE BADUE PAR TIME TIMEH TIMEL POWL POWH VER  CS 0x16*/
+	u8 HB[16] = {0xA9,0x10,0x80,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x16};
 	u8 i;
-
+	
+	HB[0] = 0xA9;
+	HB[1] = 0x10;
+	HB[2] = 0x80;
+	HB[3] = 0x01;
 	HB[4] = HB_Time;
 	HB[5] = W_Mode;
 	HB[6] = W_BaudRate;
 	HB[7] = W_Parity;
 	HB[8] = W_Time;
-	W_TimeRe = GetTime();
-	HB[9] = (W_TimeRe>>8)&0xff;
+//	W_TimeRe = W_Time;
+//	
+//	W_TimeRe = GetTime();
 	HB[10] = W_TimeRe&0xff;
+	HB[9] = (W_TimeRe>>8)&0xff;
 	
 	W_Bat = ADC_Getvalue();
 	HB[11] = W_Bat&0xff;
 	HB[12] = (W_Bat >>8)&0xff;
-	HB[13] = VERL;
-	for(i=0;i<15;i++)
+	HB[13] = VERL;//Com3con;
+	HB[14] = 0;
+	for(i=0;i<14;i++)
 	{
-		if(i<14) {HB[14] += HB[i];}
+		HB[14] += HB[i];
 	}	
-	BLsend(HB,0x10);
+	HB[15] =0x16;
+	BLsend1(HB,0x10);
 }
 u16 GetTime(void)
 {
