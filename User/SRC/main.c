@@ -132,6 +132,8 @@ if(0 == LoadFlash())//未设置BL
 			if(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
 			{
 				OutQue(&RxQUE3,&IrData,1);
+				Clear_IrRxBuffer1();
+				Clear_IrRxBuffer2();
 				SendOneByte(IrData);
 			}
 		}

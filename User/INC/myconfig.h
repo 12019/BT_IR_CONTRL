@@ -34,7 +34,7 @@
 #define		MAXOFRXQ	0x200
 #define		MAXBUFFER	0x100
 
-#define		MAXIRBUFLEN	50
+#define		MAXIRBUFLEN	100
 
 #define		VBAT_MAX	0x930
 #define		VBAT_MIN	0x800
