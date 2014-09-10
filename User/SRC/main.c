@@ -73,6 +73,7 @@ if(0 == LoadFlash())//未设置BL
 	
  	PowerOff();
 	
+	Clear_Flag = 0;
 	GET_ESAM = 0;//默认关闭ESAM数据获取
 	IrTimeBegin = 0;
 	Buf_Flag = 1;//默认IR_Buf1接收
@@ -132,8 +133,12 @@ if(0 == LoadFlash())//未设置BL
 			if(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
 			{
 				OutQue(&RxQUE3,&IrData,1);
-				Clear_IrRxBuffer1();
-				Clear_IrRxBuffer2();
+				if(Clear_Flag)
+				{
+					Clear_Flag = 0;
+					Clear_IrRxBuffer1();
+					Clear_IrRxBuffer2();
+				}
 				SendOneByte(IrData);
 			}
 		}

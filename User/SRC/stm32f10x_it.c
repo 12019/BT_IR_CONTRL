@@ -288,6 +288,7 @@ void SysTick_Handler(void)
 		}
 		IR_Wtime = 0;
 		IrTimeBegin = 1;
+		Clear_Flag = 1;
 	}	
 }
 
