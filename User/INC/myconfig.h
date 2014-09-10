@@ -256,6 +256,8 @@ EXT_ u8 Buf1_FULL,Buf2_FULL;
 
 EXT_ u8 Clear_Flag;
 
+
+
 EXT_ vu16 IrRxCounter1;
 EXT_ vu16 IrRxCounter2;
 EXT_ u8 IrBuf1[MAXIRBUFLEN];
