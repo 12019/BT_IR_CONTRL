@@ -89,7 +89,7 @@ if(0 == LoadFlash())//未设置BL
 	BL_TIME = 0;
 	Bat_Low = 0;
 	Bat_FLAG = 0;
-	ADC_time = 0;
+//	ADC_time = 0;
 	POW_TIME = 0;
 	BL_REQ_FLAG = 0;//读参数应答数据帧标志
 	TX_FLAG = 0;
@@ -130,9 +130,9 @@ if(0 == LoadFlash())//未设置BL
 
 		if(IR_TC == 1)//红外通道透传
 		{
-			if(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
+			while(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
 			{
-				OutQue(&RxQUE3,&IrData,1);
+				OutQueOneByte(&RxQUE3,&IrData);
 				if(Clear_Flag)
 				{
 					Clear_Flag = 0;
@@ -179,38 +179,38 @@ if(0 == LoadFlash())//未设置BL
 //	}
 //}
 		
-if(IR_to_BL == 1)//数据回传
-{
-		if(Buf1_FULL)
+		if(IR_to_BL == 1)//数据回传
 		{
-			USART3send(IrBuf1,MAXIRBUFLEN);
-			Buf1_FULL = 0;
-			Clear_IrRxBuffer1();
-		}
-		else if(Buf2_FULL)
-		{
-			USART3send(IrBuf2,MAXIRBUFLEN);
-			Buf2_FULL = 0;
-			Clear_IrRxBuffer2();
-		}
-
-			if(IR_Wtime >= Byte_Time_BL)
-			{
-				IrTimeBegin = 0;
-				IR_Wtime = 0;
-				
-				if(Buf_Flag == 1)
+				if(Buf1_FULL)
 				{
-					USART3send(IrBuf1,IrRxCounter1);
+					USART3send(IrBuf1,MAXIRBUFLEN);
+					Buf1_FULL = 0;
 					Clear_IrRxBuffer1();
 				}
-				else if(Buf_Flag == 2)
+				else if(Buf2_FULL)
 				{
-					USART3send(IrBuf2,IrRxCounter2);
+					USART3send(IrBuf2,MAXIRBUFLEN);
+					Buf2_FULL = 0;
 					Clear_IrRxBuffer2();
 				}
-			}
-}
+
+					if(IR_Wtime >= Byte_Time_BL)
+					{
+						IrTimeBegin = 0;
+						IR_Wtime = 0;
+						
+						if(Buf_Flag == 1)
+						{
+							USART3send(IrBuf1,IrRxCounter1);
+							Clear_IrRxBuffer1();
+						}
+						else if(Buf_Flag == 2)
+						{
+							USART3send(IrBuf2,IrRxCounter2);
+							Clear_IrRxBuffer2();
+						}
+					}
+		}
 		
 	if(QUE_TIME>=5000)//清队列
 	{
@@ -227,11 +227,12 @@ if(IR_to_BL == 1)//数据回传
 		PWR_485_OFF();
 	}
 
-		if(ADC_time >= 5000)
-		{
-			ADC_time = 0;
-			ADC_filter();
-		}
+//		if(ADC_time >= 5000)
+//		{
+//			ADC_time = 0;
+//			ADC_filter();
+//		}
+	
 		if(Bat_Low&&((W_Time*60*1000-time_sleep)>120000))//电量低且时间大于2MIN
 		{
 			Bat_Low = 0;

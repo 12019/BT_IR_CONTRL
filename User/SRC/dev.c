@@ -43,6 +43,17 @@ return QUEEMP;
 else 
 return QUESUC;
 }
+
+u8 OutQueOneByte(Quque *q,u8 *pelem)
+{
+	if(IsEmpty(q) == QUEEMP)
+	{
+		return QUEEMP;		
+	}
+	pelem[0] = q->elem[q->head];
+	q->head =(q->head+1)%MAXOFRXQ;
+	return QUESUC;
+}
 	
 u8 OutQue(Quque *q,u8 *pelem,u16 len)
 {

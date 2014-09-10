@@ -71,7 +71,7 @@
 #define	IRREQ_TIMES	0x10
 
 #define Byte_Time		50
-#define Byte_Time_BL 200
+#define Byte_Time_BL 100
  
 #define COM0	0				//ºìÍâ
 #define COM1	1				//´®¿Ú
@@ -216,7 +216,7 @@ EXT_ u8 timed;
 EXT_ u8 sysread;
 
 EXT_ u32 time_sleep;
-EXT_ u16 ADC_time;
+//EXT_ u16 ADC_time;
 EXT_ u16 BL_TIME;
 EXT_ u16 POW_TIME; 		
 EXT_ u16 QUE_TIME;
@@ -256,8 +256,6 @@ EXT_ u8 Buf1_FULL,Buf2_FULL;
 
 EXT_ u8 Clear_Flag;
 
-
-
 EXT_ vu16 IrRxCounter1;
 EXT_ vu16 IrRxCounter2;
 EXT_ u8 IrBuf1[MAXIRBUFLEN];
@@ -295,6 +293,7 @@ void InitQue(Quque *q);
 u8 IsFull(Quque *q);
 u8 InsertQue(Quque *q,u8 elem);
 u8 IsEmpty(Quque *q);
+u8 OutQueOneByte(Quque *q,u8 *pelem);
 u8 OutQue(Quque *q,u8 *pelem,u16 len);
 u8 AllOutQue(Quque *q,u8 *pelem);
 u16 NumOfQue(Quque *q);

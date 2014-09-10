@@ -358,20 +358,6 @@ void USART3_IRQHandler(void)
 	{
 		time_sleep = 0;
 		
-		if(AT_FLAG)//AT配置应答
-		{
-			RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);		
-			
-			if((RxBuffer3[RxCounter3-2] == 0x4f)&&(RxBuffer3[RxCounter3-1] == 0x4b))
-			{
-				OK = 1;
-			}
-			if(RxCounter3 == 4)
-			{
-				AT_FLAG = 0;
-			}
-		}	
-		
 		if(BL_REQ_FLAG == 1)//读参数应答第一帧数据
 		{
 		/* Read one byte from the receive data register */		
@@ -381,20 +367,18 @@ void USART3_IRQHandler(void)
 		{
 			if(TrasferMode == 0)//透传字节转发
 			{
-				if((W_Mode == IRDAMODE)&&(sysread == 1))//红外通道透传
+				InsertQue(&RxQUE3,USART_ReceiveData(USART3));
+				
+				POW_TIME = 0;
+				
+				if(W_Mode == IRDAMODE)//红外通道透传
 				{
 					POW_IR = 1;
-					POW_TIME = 0;
-					InsertQue(&RxQUE3,USART_ReceiveData(USART3));
+//					InsertQue(&RxQUE3,USART_ReceiveData(USART3));
 				}
-				else if((W_Mode == UARTMODE)&&(sysread == 1))//485通道数据透传 USART1
-				{
-					InsertQue(&RxQUE3,USART_ReceiveData(USART3));	
-				}
-//				else if((W_Mode == ESAMMODE)&&(sysread == 1))//ESAM通道数据透传 USART2
+//				else if((W_Mode == UARTMODE)&&(sysread == 1))//485通道数据透传 USART1
 //				{
-//				InsertQue(&RxQUE3,USART_ReceiveData(USART3));	
-//				USART_ITConfig(USART2, USART_IT_TXE, ENABLE);	
+//					InsertQue(&RxQUE3,USART_ReceiveData(USART3));	
 //				}
 			}
 			else//协议支持  TrasferMode:03=红外抄表	04=ESAM
@@ -414,6 +398,21 @@ void USART3_IRQHandler(void)
 					}
 			}
 		}
+		
+		if(AT_FLAG)//AT配置应答
+		{
+			RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);		
+			
+			if((RxBuffer3[RxCounter3-2] == 0x4f)&&(RxBuffer3[RxCounter3-1] == 0x4b))
+			{
+				OK = 1;
+			}
+			if(RxCounter3 == 4)
+			{
+				AT_FLAG = 0;
+			}
+		}	
+		
 	}  
 	
 	if(USART_GetITStatus(USART3, USART_IT_TXE) != RESET)//协议支持 透传在中断中处理
@@ -439,7 +438,7 @@ void TIM3_IRQHandler(void)//帧数据结束计时器
 		
 			time_sleep++;
 		
-		  ADC_time++;
+//		  ADC_time++;
 		
 			POW_TIME++;
 		
