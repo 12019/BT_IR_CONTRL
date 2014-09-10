@@ -24,6 +24,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "myconfig.h"
 
+u8 n = 0;
+u8 tmp = 0;
+//u8 USART_RX_BUF[USART_REC_LEN]; 
+//u16 USART_RX_STA=0;
+
 /** @addtogroup STM32F10x_StdPeriph_Examples
   * @{
   */
@@ -138,67 +143,154 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
-  TimingDelay--;
-}
+  u8 i = 0,tmp;
+	u8 j = 0;
 
-/******************************************************************************/
-/*                 STM32F10x Peripherals Interrupt Handlers                   */
-/*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
-/*  available peripheral interrupt handler's name please refer to the startup */
-/*  file (startup_stm32f10x_xx.s).                                            */
-/******************************************************************************/
-
-/**
-  * @brief  This function handles PPP interrupt request.
-  * @param  None
-  * @retval None
-  */
-/*void PPP_IRQHandler(void)
-{
-}*/
-/*******************************************************************************
-* Function Name  : RTC_IRQHandler
-* Description    : This function handles RTC global interrupt request.
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void RTC_IRQHandler(void)
-{
-	if (RTC_GetITStatus(RTC_IT_SEC) != RESET)
+	if(TX_FLAG)
 	{
-		/* Clear the RTC Second interrupt */
-		RTC_ClearITPendingBit(RTC_IT_SEC);		
-		/* Wait until last write operation on RTC registers has finished */
-		RTC_WaitForLastTask();
-		if(time_sleep == 0)
+		CountTX++;
+		if(Tx_bit == 0)//发送起始位
 		{
-			W_TimeRe = W_Time*60;
+		TXD_low(); 
+		CountTX = 0;
+		Tx_bit = 1;
 		}
-		else
+		else if((CountTX == IR_BaudRate_Time)&&(Tx_bit > 0)&&(Tx_bit < 9))//8bit数据
 		{
-			W_TimeRe--;
+			tmp	= (BYTE >> (Tx_bit - 1))& 0x01;
+			if(tmp == 0)
+			{
+				TXD_low();		
+			}
+			else
+			{
+				TXD_high();
+				Tx_Parity++;
+			}
+			CountTX = 0;
+			Tx_bit++;
 		}
-		time_sleep ++;
-		time_send ++;
-		if(Bat_Low == 1)
+		else if((CountTX == IR_BaudRate_Time)&&(Tx_bit == 9))//效验位
 		{
-			RUN_ON();			
+			if(Tx_Parity%2 == 0)
+			{
+				TXD_low();	
+			}
+			else
+			{
+				TXD_high();
+			}
+			CountTX = 0;
+			Tx_bit++;
 		}
-		else
+		else if((CountTX == IR_BaudRate_Time)&&(Tx_bit == 10))//停止位
 		{
-			RUN_TOG();			
+			TXD_high();
+			CountTX = 0;
+			Tx_bit++;
 		}
-		/* Reset RTC Counter when Time is 23:59:59 */
-		if (RTC_GetCounter() == 0x00015180)
+		else if((CountTX == IR_BaudRate_Time)&&(Tx_bit == 11))
 		{
-			/* Change the current time */
-			RTC_SetCounter(0);
-			/* Wait until last write operation on RTC registers has finished */
-			RTC_WaitForLastTask();
+		CountTX = 0;
+		TX_FLAG = 0;
+		Tx_bit = 0;
 		}
 	}
+	
+	if(RX_FLAG)
+	{
+		CountRX++;
+		if((CountRX == (IR_BaudRate_Time/2))&&(Receive_bit == 0))
+		{
+			if(GPIOA->IDR&(1<<5)) 
+			{
+				RX_FLAG = 0;
+				CountRX = 0;
+				Receive_bit = 0;
+				EXTI9_5_ENABLE();	
+			}
+			else//起始位
+			{
+				CountRX = 0;
+				Receive_bit = 1;
+			}
+		}			
+		else if((CountRX == IR_BaudRate_Time)&&(Receive_bit > 0)&&(Receive_bit < 9))//8位数据
+		{
+			tmp_data >>= 1;		
+			if(GPIOA->IDR&(1<<5)) 
+			{
+			tmp_data |=0x80;
+			}
+			CountRX = 0;
+			Receive_bit++;
+		}
+		else if((CountRX == IR_BaudRate_Time)&&(Receive_bit == 9))//效验位
+		{
+			Rx_Parity = GPIOA->IDR&(1<<5);
+			CountRX = 0;
+			Receive_bit++;
+		}
+		else if((CountRX == IR_BaudRate_Time)&&(Receive_bit == 10))//停止位
+		{
+			if(GPIOA->IDR&(1<<5)) 
+			{
+				for(j=0,i=0;i<8;i++)
+				{
+					if((tmp_data>>i&0x01) == 0x01)
+					{
+						j++;
+					}
+				}		
+				if(((j%2 == 0)&&(Rx_Parity == 0))||((j%2 != 0)&&(Rx_Parity != 0)))
+				{
+					if(Ver_flag)
+					{
+						IrDARxBuffer1[IrDARxCounter++] = tmp_data;
+					}
+					else 
+					{		
+						IR_to_BL = 1;
+						
+						if(Buf_Flag == 1)
+						{
+							if(IrRxCounter1 >= MAXIRBUFLEN)
+							{					
+								IrRxCounter2 = 0;
+								IrBuf2[IrRxCounter2++] = tmp_data;
+								
+								IrRxCounter1 = 0;
+								Buf_Flag = 2;
+								Buf1_FULL = 1;
+							}
+							else IrBuf1[IrRxCounter1++] = tmp_data;
+						}
+						else if(Buf_Flag == 2)
+						{		
+							if(IrRxCounter2 >= MAXIRBUFLEN)
+							{
+								IrRxCounter1 = 0;
+								IrBuf1[IrRxCounter1++] = tmp_data;
+								
+								IrRxCounter2 = 0;
+								Buf_Flag = 1;
+								Buf2_FULL = 1;
+							}
+							else IrBuf2[IrRxCounter2++] = tmp_data;
+						}		
+					}
+				}
+				RX_FLAG = 0;
+				CountRX = 0;
+				Receive_bit = 0;
+				EXTI9_5_ENABLE();			
+			}
+		}
+		IR_Wtime = 0;
+		IrTimeBegin = 1;
+	}	
 }
+
 /*******************************************************************************
 * Function Name  : USART1_IRQHandler
 * Description    : This function handles USART1 global interrupt request.
@@ -206,25 +298,24 @@ void RTC_IRQHandler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void USART1_IRQHandler(void)
+void USART1_IRQHandler(void)//485
 { 
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
-		/* Read one byte from the receive data register */
-		RxData1 = USART_ReceiveData(USART1);
-//		USART3send(RxData1);
-	}  
-	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
-	{   
-		USART1send(&RxQUE3);
+			InsertQue(&RxQUE1, USART_ReceiveData(USART1));
 	}
-	if(USART_GetITStatus(USART1, USART_IT_TC) != RESET)
-	{
-		if(COMFIR == Com3first)
-		{
-			USART_ITConfig(USART1, USART_IT_TC, DISABLE);
-		}
-	}	
+	
+	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
+	{	
+		/* Write one byte to the transmit data register */
+				USART_SendData(USART1, TxBuffer1[TxCounter1++]); 
+				if(TxCounter1 >= MaxNbrofTx1)
+				{				
+					/* Disable the USART1 Transmit interrupt */
+					USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
+				}
+	}
+	
 }
 /*******************************************************************************
 * Function Name  : USART2_IRQHandler
@@ -233,42 +324,24 @@ void USART1_IRQHandler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void USART2_IRQHandler(void)
+void USART2_IRQHandler(void)//ESAM 协议支持
 {
 	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
 	{
 		/* Read one byte from the receive data register */
-		RxData2 = USART_ReceiveData(USART2);
-//		UARTsend(RxData2);
-		if(LED2_0)
-		{
-			RxTmp2[Rx2len++] = RxData2;
-		}
-		else
-		{
-			InsertQue(&RxQUE2,RxData2);
-			if(COMFIR == Com2first)
-			{
-				Com2first = COMTXON;
-				USART_ITConfig(USART3, USART_IT_TXE, ENABLE);		
-			}
-		}		
-	}
-	if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET)
-	{   
-		USART2send();
-		/* Disable the USART2 Transmit interrupt */
-//		USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
-	}
-	if(USART_GetITStatus(USART2, USART_IT_TC) != RESET)
-	{
-		if(COMFIR == Com3first)
-		{
-			USART_ITConfig(USART2, USART_IT_TC, DISABLE);
-			PWM_Disable();
-		}
+		RxBuffer2[RxCounter2++] = USART_ReceiveData(USART2);
 	}
 	
+	if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET)
+	{   
+		/* Write one byte to the transmit data register */
+				USART_SendData(USART2, TxBuffer2[TxCounter2++]); 
+				if(TxCounter2 >= MaxNbrofTx2)
+				{				
+					/* Disable the USART1 Transmit interrupt */
+					USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
+				}
+	}
 }
 
 /*******************************************************************************
@@ -280,73 +353,142 @@ void USART2_IRQHandler(void)
 *******************************************************************************/
 void USART3_IRQHandler(void)
 {
-	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
+	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)//接收寄存器满中断
 	{
-		/* Read one byte from the receive data register */
-		InsertQue(&RxQUE3,USART_ReceiveData(USART3));
-		if((COMFIR == Com3first)&&(W_Mode == IRDAMODE)&&(sysread == 1))
+		time_sleep = 0;
+		
+		if(AT_FLAG)//AT配置应答
 		{
+			RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);		
 			
-			Com3first = COMTXON;
-			USART_ITConfig(USART2, USART_IT_TXE, ENABLE);				
-		}
-		else if((COMFIR == Com3first)&&(W_Mode == UARTMODE)&&(sysread == 1))
+			if((RxBuffer3[RxCounter3-2] == 0x4f)&&(RxBuffer3[RxCounter3-1] == 0x4b))
+			{
+				OK = 1;
+			}
+			if(RxCounter3 == 4)
+			{
+				AT_FLAG = 0;
+			}
+		}	
+		
+		if(BL_REQ_FLAG == 1)//读参数应答第一帧数据
 		{
-			Com3first = COMTXON;
-			USART1send(&RxQUE3);			
+		/* Read one byte from the receive data register */		
+		InsertQue(&RxQUE3, USART_ReceiveData(USART3));	
+		}	
+		else if(BL_REQ_FLAG == 2)//非第一帧应答数据 
+		{
+			if(TrasferMode == 0)//透传字节转发
+			{
+				if((W_Mode == IRDAMODE)&&(sysread == 1))//红外通道透传
+				{
+					POW_IR = 1;
+					POW_TIME = 0;
+					InsertQue(&RxQUE3,USART_ReceiveData(USART3));
+				}
+				else if((W_Mode == UARTMODE)&&(sysread == 1))//485通道数据透传 USART1
+				{
+					InsertQue(&RxQUE3,USART_ReceiveData(USART3));	
+				}
+//				else if((W_Mode == ESAMMODE)&&(sysread == 1))//ESAM通道数据透传 USART2
+//				{
+//				InsertQue(&RxQUE3,USART_ReceiveData(USART3));	
+//				USART_ITConfig(USART2, USART_IT_TXE, ENABLE);	
+//				}
+			}
+			else//协议支持  TrasferMode:03=红外抄表	04=ESAM
+			{
+					POW_IR = 1;
+					POW_TIME = 0;
+				/* Read one byte from the receive data register */
+					RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);
+					if(Usart3_EN == 0)
+					{
+						Usart3_EN = 1;
+						Usart3_Wtime = 0;
+					}
+					else
+					{
+						Usart3_Wtime = 0;
+					}
+			}
 		}
 	}  
-	if(USART_GetITStatus(USART3, USART_IT_TXE) != RESET)
-	{   
-		if(Com3con == 0)
-		{
-			USART3send();
-		}
-		else
-		{
-		/* Write one byte to the transmit data register */
-		USART_SendData(USART3, TxBuffer3[TxCounter3++]); 
+	
+	if(USART_GetITStatus(USART3, USART_IT_TXE) != RESET)//协议支持 透传在中断中处理
+	{  
+		time_sleep = 0;	
+		
+		USART_SendData(USART3, TxBuffer3[TxCounter3++]);
+		
 		if(TxCounter3 >= MaxNbrofTx3)
-	    {				
-		    /* Disable the USART1 Transmit interrupt */
-				USART_ITConfig(USART3, USART_IT_TXE, DISABLE);
-	    }
+		{				
+			/* Disable the USART1 Transmit interrupt */
+			USART_ITConfig(USART3, USART_IT_TXE, DISABLE);
 		}
 	}
 }
 
-/*******************************************************************************
-* Function Name  : ADC1_2_IRQHandler
-* Description    : This function handles ADC1 and ADC2 global interrupts requests.
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void ADC1_IRQHandler(void)
+void TIM3_IRQHandler(void)//帧数据结束计时器
 {
-	/* Get converted value */
-	ADCConvertedValue[ADCcount] = ADC_GetConversionValue(ADC1);
-	ADCcount++;
-	if((ADCcount >= ADC_TIMES)&&(ADCTure == 0))
+	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
 	{
-		for(ADCcount=0;ADCcount<ADC_TIMES;ADCcount++)
-		{
-			ADCConverted[ADCcount] = ADCConvertedValue[ADCcount];
-		}
-		ADCcount = 0;
-		ADCTure = 1;
-	}
-	else if(ADCcount >= ADC_TIMES)
-	{
-		ADCcount = 0;
+		/* Clear TIM3 Update interrupt pending bit*/
+		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+		
+			time_sleep++;
+		
+		  ADC_time++;
+		
+			POW_TIME++;
+		
+			QUE_TIME++;
+		
+			if(BL_STA == 1)//BL未连接
+			{
+				BL_TIME++;
+				if(BL_TIME == 200)
+				{
+					BL_TIME = 0;
+					RUN_TOG();
+				}
+			}
+			else if(BL_STA == 2)//BL已连接
+			{
+				BL_TIME++;
+				if(BL_TIME == 1000)
+				{
+					BL_TIME = 0;
+					RUN_TOG();
+				}
+			}
+		
+			if(Usart3_EN == 1)
+			{
+				Usart3_Wtime++;
+			}	
+			
+			if(IrTimeBegin)
+			{
+				IR_Wtime++;
+			}
 	}
 }
-/**
-  * @}
-  */
 
-/**
-  * @}
-  */
+void EXTI9_5_IRQHandler(void)//PA5
+{
+   if(EXTI_GetITStatus(EXTI_Line5) != RESET)
+	{
+	/* Disable the Selected IRQ Channels -------------------------------------*/
+	//   	  NVIC->ICER[EXTI9_5_IRQn >> 0x05] =
+	//      		(uint32_t)0x01 << (EXTI9_5_IRQn & (uint8_t)0x1F);
+		EXTI_ClearITPendingBit(EXTI_Line5);
+		if(TX_FLAG == 0)
+		{
+			RX_FLAG = 1;			
+			EXTI9_5_DISABLE();
+		}
+	}
+}
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

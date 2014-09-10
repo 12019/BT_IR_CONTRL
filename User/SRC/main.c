@@ -1,27 +1,7 @@
-/**
-  ******************************************************************************
-  * @file    GPIO/IOToggle/main.c 
-  * @author  MCD Application Team
-  * @version V3.5.0
-  * @date    08-April-2011
-  * @brief   Main program body.
-  ******************************************************************************
-  * @attention
-  *
-  * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
-  * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
-  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
-  * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
-  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-  *
-  * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
-  ******************************************************************************
-  */ 
-
 /* Includes ------------------------------------------------------------------*/
 #define root
 #include "myconfig.h"
+#include "ESAM.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -30,147 +10,239 @@
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-#define PWR_SLEEPEntry_WFI 0
-#define	PWR_SLEEPEntry_WFE 1
 /**
   * @brief  Main program.
   * @param  None
   * @retval None
   */
-
-/*******************************************************************************
-* Function Name  : PWR_EnterSLEEPMode
-* Description    : Enters SLEEP mode.
-* Input          : - SysCtrl_Set: Select the Sleep mode entry mechanism,.
-*                    This parameter can be one of the following values:
-*                       - 0: MCU enters Sleep mode as soon as WFI or WFE instruction is executed.
-*                       - 1: MCU enters Sleep mode as soon as it exits the lowest priority ISR.
-*
-*                  - PWR_STOPEntry: specifies if SLEEP mode in entered with WFI or WFE instruction.
-*                     This parameter can be one of the following values:
-*                       - PWR_SLEEPEntry_WFI: enter STOP mode with WFI instruction
-*                       - PWR_SLEEPEntry_WFE: enter STOP mode with WFE instruction
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void PWR_EnterSLEEPMode(/*u32 SysCtrl_Set,*/ u8 PWR_SLEEPEntry)
-	{
-//     if (SysCtrl_Set)
-//         *(vu32 *) SCB_SysCtrl |= SysCtrl_SLEEPONEXIT_Set;    // Set SLEEPONEXIT
-//     else
-//         *(vu32 *) SCB_SysCtrl &= ~SysCtrl_SLEEPONEXIT_Set;// Reset SLEEPONEXIT
-
-//     *(vu32 *) SCB_SysCtrl &= ~SysCtrl_SLEEPDEEP_Set;    // Clear SLEEPDEEP bit
-	if(PWR_SLEEPEntry == PWR_SLEEPEntry_WFI)            // Select SLEEP mode entry
-			__WFI();                                        // Request Wait For Interrupt
-	else
-			__WFE();                                        // Request Wait For Event
-	}	
-	
+extern __IO uint16_t ADC_ConvertedValue;
 	
 int main(void)
-{
-  /*!< At this stage the microcontroller clock setting is already configured, 
-       this is done through SystemInit() function which is called from startup
-       file (startup_stm32f10x_xx.s) before to branch to application main.
-       To reconfigure the default setting of SystemInit() function, refer to
-       system_stm32f10x.c file
-     */     
+{			
+	vu16 Convert = 0;
+	u8 i = 0;
+	u8 BLset_command[] = {"AT+UART=115200, 0,2\r\n"};
+	u8 IrData = 0,Rx485 = 0,Tx485 = 0;
+	
 	/* System Clocks Configuration */
 	RCC_Configuration();
+	
 #ifdef  IWDGSW
-	/*IWDG configuration*/
-// 	IWDG_Configuration();
 	Check_Rst();
 #endif
-	Com3first = COMFIR;
-	Com2first = COMFIR;
-	TimingDelay = 0;
 	
-	InitQue(&RxQUE2);
-	InitQue(&RxQUE3);
 	/* Configure the GPIO ports */
 	GPIO_Configuration();
-	/*USART and UART configuration*/
-	USART_Configuration();	
+	/*USART configuration*/
+	USART_Configuration();
+	/*7816 configuration*/
+	ISO7816_Enable();
 	/*TIM configuration*/
 	TIM_Configuration();
 	/* NVIC configuration */
-	NVIC_Configuration(); 	
-	time_sleep = 0;
-	/* RTC configuration */
-	RTC_Configuration();	
-  /* Configure the SysTick to generate an interrupt each 1 millisecond */
+	NVIC_Configuration(); 		
+  /* Configure the SysTick to generate an interrupt each 10 millisecond */
   SysTick_Configuration();
 	/*ADC configuration*/
-	ADC_Configuration();
-	PowerUp();
-	sysread = 0;
-	HB_Time = HBTIME;
-	W_Mode = IRDAMODE;
-	W_Time = SLEEPTIME;
-	if(PowerOn == RST_PWRON)
+	myADC_init();	
+	
+/*********************BLSET***************************/	
+if(0 == LoadFlash())//未设置BL
+{
+	PWR_BL_ON();
+	AT_FLAG = 0;
+	IWDG_ReloadCounter();
+	Clear_RxBuffer3();
+	SetUartState(COM3,CBR_38400,USART_Parity_No);//BL 38400 1停 无
+	Set_BL_Enter();//进入AT模式
+	delay_nms(1000);
+	USART3send(BLset_command,sizeof(BLset_command)-1);//设置115200 1停 偶
+	while(!OK)//'OK' 
 	{
-		Req_Irda();	
-	}
-	PWR_IR_OFF();
-	Req_BL();
-	if(sysread != 1)
-	{
+		delay_nms(10);
+		i++;
+		if(i>=30)//BL设置失败 超过3s超时退出
+		{
 		NVIC_SystemReset();
+		}
 	}
-	InitQue(&RxQUE3);
-	time_send = 0;
+	WriteFLAG();//设置完成
+	NVIC_SystemReset();
+}
+/*****************************************************/	
+	
+ 	PowerOff();
+	
+	GET_ESAM = 0;//默认关闭ESAM数据获取
+	IrTimeBegin = 0;
+	Buf_Flag = 1;//默认IR_Buf1接收
+	IrRxCounter1 = 0;
+	IrRxCounter2 = 0;
+	Buf1_FULL = 0;
+	Buf2_FULL = 0;
+	POW_IR = 1;
+	OK = 0;
+	Ver_flag = 0;
+	IR_to_BL = 0;
+	BL_STA = 0;
+	BL_TIME = 0;
+	Bat_Low = 0;
+	Bat_FLAG = 0;
+	ADC_time = 0;
+	POW_TIME = 0;
+	BL_REQ_FLAG = 0;//读参数应答数据帧标志
+	TX_FLAG = 0;
+	RX_FLAG = 0;
+	IR_TC = 0;
+	Rs485_TC = 0;
+	IR_DB_RZ = 0;
+	ZF_LEN = 1;
+	Usart3_Wtime = 0;
+	IR_Wtime = 0;
+	time_sleep = 0;
+	sysread = 0;
+	W_Mode = BLMODE;
+	W_Time = 10;//初始化等待休眠时间 分钟
+	IR_BaudRate_Time = 83;//IR BaudRate
+	
+	InitQue(&RxQUE1);//485接收队列
+//	InitQue(&RxQUE2);//红外接收队列
+	InitQue(&RxQUE3);//蓝牙接收队列
+	
+	Clear_IrRxBuffer1();
+	Clear_IrRxBuffer2();
+
+//	Clear_RxBuffer1();
+	Clear_RxBuffer2();
+	Clear_RxBuffer3();
+	
+	ESAM_Info();
+	W_Bat = ADC_filter();
+	
+	PowerUp();//BL等待配对	
+	delay_nms(100);
+	Req_BL();//请求蓝牙数据
+	
   while (1)
   {
-		Delay(100);
-		if(HB_Time <= time_send)
+		IWDG_ReloadCounter();		
+
+		if(IR_TC == 1)//红外通道透传
 		{
-			PWR_IR_OFF();
-			time_send = 0;
-			Send_HB();
-//			Com3con = 0;
+			if(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
+			{
+				OutQue(&RxQUE3,&IrData,1);
+				SendOneByte(IrData);
+			}
 		}
-		if(time_sleep>=(W_Time*60))
+		else if(Rs485_TC == 1)//485通道透传
 		{
+			if(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
+			{
+				OutQue(&RxQUE3,&Rx485,1);
+				USART1send(&Rx485,1);//BL发给485
+			}
+			
+			if(IsEmpty(&RxQUE1) != QUEEMP)//队列非空
+			{
+				OutQue(&RxQUE1,&Tx485,1);
+				USART3send(&Tx485,1);//485数据透传给BL
+			}
+		}
+		else//协议支持
+		{
+			if(Usart3_Wtime > Byte_Time)//蓝牙接收数据帧结束
+			{
+				Usart3_Wtime = 0;
+				Usart3_EN = 0;
+				
+				if(TrasferMode == 3)//红外抄表
+				{
+					BL_Unpack(RxBuffer3,RxCounter3);//帧数据解包
+				}
+			}
+		}
+		
+//if(IR_to_BL == 1)//数据回传
+//{
+//	if(IsEmpty(&RxQUE2) != QUEEMP)//队列非空
+//	{
+//		OutQue(&RxQUE2,&Tx_Data,1);
+//		USART3send(&Tx_Data,1);//IR数据透传给BL
+//	}
+//}
+		
+if(IR_to_BL == 1)//数据回传
+{
+		if(Buf1_FULL)
+		{
+			USART3send(IrBuf1,MAXIRBUFLEN);
+			Buf1_FULL = 0;
+			Clear_IrRxBuffer1();
+		}
+		else if(Buf2_FULL)
+		{
+			USART3send(IrBuf2,MAXIRBUFLEN);
+			Buf2_FULL = 0;
+			Clear_IrRxBuffer2();
+		}
+
+			if(IR_Wtime >= Byte_Time_BL)
+			{
+				IrTimeBegin = 0;
+				IR_Wtime = 0;
+				
+				if(Buf_Flag == 1)
+				{
+					USART3send(IrBuf1,IrRxCounter1);
+					Clear_IrRxBuffer1();
+				}
+				else if(Buf_Flag == 2)
+				{
+					USART3send(IrBuf2,IrRxCounter2);
+					Clear_IrRxBuffer2();
+				}
+			}
+}
+		
+	if(QUE_TIME>=5000)//清队列
+	{
+		InitQue(&RxQUE1);//485接收队列
+	//	InitQue(&RxQUE2);//红外接收队列
+		InitQue(&RxQUE3);//蓝牙接收队列
+		QUE_TIME = 0;
+	}
+	if(POW_TIME>=M_Time*1000)//关IR or 485
+	{
+		POW_TIME = 0;
+		PWM_Disable();
+		PWR_IR_OFF();
+		PWR_485_OFF();
+	}
+
+		if(ADC_time >= 5000)
+		{
+			ADC_time = 0;
+			ADC_filter();
+		}
+		if(Bat_Low&&((W_Time*60*1000-time_sleep)>120000))//电量低且时间大于2MIN
+		{
+			Bat_Low = 0;
+			W_Time = 2;
+			time_sleep = 0;
+		}
+		
+		if(time_sleep>=(W_Time*60*1000))//等待休眠时间 无数据超时进入睡眠模式 
+		{
+			time_sleep = 0;
 			PowerDown();
 		}
-		if(LED2_0)
+		
+		if(LED2_0)//断开服务
 		{
 			NVIC_SystemReset();
 		}
-//		PWR_EnterSLEEPMode(PWR_SLEEPEntry_WFI);		
-  }
+	}
 }
 
-#ifdef  USE_FULL_ASSERT
-
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t* file, uint32_t line)
-{ 
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-
-  /* Infinite loop */
-  while (1)
-  {
-  }
-}
-
-#endif
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
+/******************* (C) COPYRIGHT 2014 STMicroelectronics *****END OF FILE****/
