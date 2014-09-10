@@ -136,8 +136,8 @@ if(0 == LoadFlash())//未设置BL
 				if(Clear_Flag)
 				{
 					Clear_Flag = 0;
-					Clear_IrRxBuffer1();
-					Clear_IrRxBuffer2();
+					IrRxCounter1 = 0;
+					IrRxCounter2 = 0;
 				}
 				SendOneByte(IrData);
 			}
@@ -212,13 +212,14 @@ if(0 == LoadFlash())//未设置BL
 					}
 		}
 		
-	if(QUE_TIME>=5000)//清队列
-	{
-		InitQue(&RxQUE1);//485接收队列
-	//	InitQue(&RxQUE2);//红外接收队列
-		InitQue(&RxQUE3);//蓝牙接收队列
-		QUE_TIME = 0;
-	}
+//	if(QUE_TIME>=5000)//清队列
+//	{
+//		InitQue(&RxQUE1);//485接收队列
+//	//	InitQue(&RxQUE2);//红外接收队列
+//		InitQue(&RxQUE3);//蓝牙接收队列
+//		QUE_TIME = 0;
+//	}
+		
 	if(POW_TIME>=M_Time*1000)//关IR or 485
 	{
 		POW_TIME = 0;

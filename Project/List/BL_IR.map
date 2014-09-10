@@ -418,12 +418,12 @@ Image Symbol Table
     .ARM.Collect$$rtexit$$00000003           0x080001ba   Section        4  rtexit2.o(.ARM.Collect$$rtexit$$00000003)
     .ARM.Collect$$rtexit$$00000004           0x080001be   Section        6  rtexit2.o(.ARM.Collect$$rtexit$$00000004)
     .text                                    0x080001c4   Section        0  main.o(.text)
-    NVIC_SystemReset                         0x0800050f   Thumb Code    26  main.o(.text)
-    .text                                    0x08000600   Section        0  stm32f10x_it.o(.text)
-    .text                                    0x08000d3c   Section        0  dev.o(.text)
-    NVIC_SetPriority                         0x08000d3d   Thumb Code    32  dev.o(.text)
-    .text                                    0x08001880   Section        0  deal.o(.text)
-    NVIC_SystemReset                         0x080021ad   Thumb Code    26  deal.o(.text)
+    NVIC_SystemReset                         0x080004f1   Thumb Code    26  main.o(.text)
+    .text                                    0x080005e0   Section        0  stm32f10x_it.o(.text)
+    .text                                    0x08000d08   Section        0  dev.o(.text)
+    NVIC_SetPriority                         0x08000d09   Thumb Code    32  dev.o(.text)
+    .text                                    0x0800184c   Section        0  deal.o(.text)
+    NVIC_SystemReset                         0x080021a7   Thumb Code    26  deal.o(.text)
     .text                                    0x080021dc   Section        0  delay.o(.text)
     .text                                    0x08002214   Section        0  esam.o(.text)
     .text                                    0x08002f48   Section        0  myadc.o(.text)
@@ -468,21 +468,21 @@ Image Symbol Table
     .text                                    0x08006056   Section        0  indicate_semi.o(.text)
     uc_hextab                                0x08006056   Data          20  _printf_hex_int.o(.constdata)
     lc_hextab                                0x0800606a   Data          20  _printf_hex_int.o(.constdata)
-    .data                                    0x20000000   Section      120  main.o(.data)
-    .data                                    0x20000078   Section        1  deal.o(.data)
-    .data                                    0x20000079   Section       56  esam.o(.data)
-    .data                                    0x200000b1   Section       20  stm32f10x_rcc.o(.data)
-    APBAHBPrescTable                         0x200000b1   Data          16  stm32f10x_rcc.o(.data)
-    ADCPrescTable                            0x200000c1   Data           4  stm32f10x_rcc.o(.data)
-    .data                                    0x200000c8   Section       20  system_stm32f10x.o(.data)
-    .bss                                     0x200000dc   Section     3344  main.o(.bss)
-    .bss                                     0x20000dec   Section       24  myadc.o(.bss)
-    .bss                                     0x20000e04   Section       96  libspace.o(.bss)
-    HEAP                                     0x20000e68   Section      512  startup_stm32f10x_md_vl.o(HEAP)
-    Heap_Mem                                 0x20000e68   Data         512  startup_stm32f10x_md_vl.o(HEAP)
-    STACK                                    0x20001068   Section     1024  startup_stm32f10x_md_vl.o(STACK)
-    Stack_Mem                                0x20001068   Data        1024  startup_stm32f10x_md_vl.o(STACK)
-    __initial_sp                             0x20001468   Data           0  startup_stm32f10x_md_vl.o(STACK)
+    .data                                    0x20000000   Section      116  main.o(.data)
+    .data                                    0x20000074   Section        1  deal.o(.data)
+    .data                                    0x20000075   Section       56  esam.o(.data)
+    .data                                    0x200000ad   Section       20  stm32f10x_rcc.o(.data)
+    APBAHBPrescTable                         0x200000ad   Data          16  stm32f10x_rcc.o(.data)
+    ADCPrescTable                            0x200000bd   Data           4  stm32f10x_rcc.o(.data)
+    .data                                    0x200000c4   Section       20  system_stm32f10x.o(.data)
+    .bss                                     0x200000d8   Section     3244  main.o(.bss)
+    .bss                                     0x20000d84   Section       24  myadc.o(.bss)
+    .bss                                     0x20000d9c   Section       96  libspace.o(.bss)
+    HEAP                                     0x20000e00   Section      512  startup_stm32f10x_md_vl.o(HEAP)
+    Heap_Mem                                 0x20000e00   Data         512  startup_stm32f10x_md_vl.o(HEAP)
+    STACK                                    0x20001000   Section     1024  startup_stm32f10x_md_vl.o(STACK)
+    Stack_Mem                                0x20001000   Data        1024  startup_stm32f10x_md_vl.o(STACK)
+    __initial_sp                             0x20001400   Data           0  startup_stm32f10x_md_vl.o(STACK)
 
     Global Symbols
 
@@ -572,73 +572,73 @@ Image Symbol Table
     __rt_exit_ls                             0x080001bb   Thumb Code     0  rtexit2.o(.ARM.Collect$$rtexit$$00000003)
     __rt_exit_prels_1                        0x080001bb   Thumb Code     0  rtexit2.o(.ARM.Collect$$rtexit$$00000002)
     __rt_exit_exit                           0x080001bf   Thumb Code     0  rtexit2.o(.ARM.Collect$$rtexit$$00000004)
-    main                                     0x080001c5   Thumb Code   842  main.o(.text)
-    NMI_Handler                              0x08000601   Thumb Code     2  stm32f10x_it.o(.text)
-    HardFault_Handler                        0x08000603   Thumb Code     4  stm32f10x_it.o(.text)
-    MemManage_Handler                        0x08000607   Thumb Code     4  stm32f10x_it.o(.text)
-    BusFault_Handler                         0x0800060b   Thumb Code     4  stm32f10x_it.o(.text)
-    UsageFault_Handler                       0x0800060f   Thumb Code     4  stm32f10x_it.o(.text)
-    SVC_Handler                              0x08000613   Thumb Code     2  stm32f10x_it.o(.text)
-    DebugMon_Handler                         0x08000615   Thumb Code     2  stm32f10x_it.o(.text)
-    PendSV_Handler                           0x08000617   Thumb Code     2  stm32f10x_it.o(.text)
-    SysTick_Handler                          0x08000619   Thumb Code   848  stm32f10x_it.o(.text)
-    USART1_IRQHandler                        0x08000969   Thumb Code    90  stm32f10x_it.o(.text)
-    USART2_IRQHandler                        0x080009c3   Thumb Code   250  stm32f10x_it.o(.text)
-    USART3_IRQHandler                        0x08000abd   Thumb Code   298  stm32f10x_it.o(.text)
-    TIM3_IRQHandler                          0x08000be7   Thumb Code   200  stm32f10x_it.o(.text)
-    EXTI9_5_IRQHandler                       0x08000caf   Thumb Code    34  stm32f10x_it.o(.text)
-    InitQue                                  0x08000d5d   Thumb Code    30  dev.o(.text)
-    IsFull                                   0x08000d7b   Thumb Code    36  dev.o(.text)
-    InsertQue                                0x08000d9f   Thumb Code    50  dev.o(.text)
-    IsEmpty                                  0x08000dd1   Thumb Code    22  dev.o(.text)
-    OutQueOneByte                            0x08000de7   Thumb Code    52  dev.o(.text)
-    OutQue                                   0x08000e1b   Thumb Code   284  dev.o(.text)
-    AllOutQue                                0x08000f37   Thumb Code   126  dev.o(.text)
-    NumOfQue                                 0x08000fb5   Thumb Code    74  dev.o(.text)
-    RCC_Configuration                        0x08000fff   Thumb Code   170  dev.o(.text)
-    NVIC_Configuration                       0x080010a9   Thumb Code   148  dev.o(.text)
-    GPIO_Configuration                       0x0800113d   Thumb Code   418  dev.o(.text)
-    USART_Configuration                      0x080012df   Thumb Code   140  dev.o(.text)
-    ISO7816_Enable                           0x0800136b   Thumb Code   154  dev.o(.text)
-    ISO7816_Disable                          0x08001405   Thumb Code    80  dev.o(.text)
-    SetUartState                             0x08001455   Thumb Code   182  dev.o(.text)
-    USART1send                               0x0800150b   Thumb Code    82  dev.o(.text)
-    USART2send                               0x0800155d   Thumb Code    48  dev.o(.text)
-    USART3send                               0x0800158d   Thumb Code    48  dev.o(.text)
-    TIM_Configuration                        0x080015bd   Thumb Code   166  dev.o(.text)
-    PWM_Disable                              0x08001663   Thumb Code    14  dev.o(.text)
-    PWM_Enable                               0x08001671   Thumb Code    12  dev.o(.text)
-    IWDG_Configuration                       0x0800167d   Thumb Code    52  dev.o(.text)
-    IR_GPIO_Init                             0x080016b1   Thumb Code   146  dev.o(.text)
-    EXTI9_5_DISABLE                          0x08001743   Thumb Code    30  dev.o(.text)
-    EXTI9_5_ENABLE                           0x08001761   Thumb Code    32  dev.o(.text)
-    Check_Rst                                0x08001781   Thumb Code    86  dev.o(.text)
-    SysTick_Configuration                    0x080017d7   Thumb Code    74  dev.o(.text)
-    Hex2Bcd                                  0x08001821   Thumb Code    26  dev.o(.text)
-    Bcd2Hex                                  0x0800183b   Thumb Code    20  dev.o(.text)
-    CheckHE                                  0x08001881   Thumb Code    98  deal.o(.text)
-    CheckSum                                 0x080018e3   Thumb Code    60  deal.o(.text)
-    CheckDB                                  0x0800191f   Thumb Code   192  deal.o(.text)
-    Clear_RxBuffer3                          0x080019df   Thumb Code    26  deal.o(.text)
-    Set_BL_Enter                             0x080019f9   Thumb Code    42  deal.o(.text)
-    PowerDown                                0x08001a23   Thumb Code    76  deal.o(.text)
-    Set_Sys                                  0x08001a6f   Thumb Code   756  deal.o(.text)
-    Send_req                                 0x08001d63   Thumb Code   120  deal.o(.text)
-    PowerUp                                  0x08001ddb   Thumb Code    38  deal.o(.text)
-    PowerOff                                 0x08001e01   Thumb Code    44  deal.o(.text)
-    Set_BL_Exit                              0x08001e2d   Thumb Code    28  deal.o(.text)
-    Req_BL                                   0x08001e49   Thumb Code   126  deal.o(.text)
-    SendOneByte                              0x08001ec7   Thumb Code    64  deal.o(.text)
-    SendBytes                                0x08001f07   Thumb Code    26  deal.o(.text)
-    Clear_RxBuffer1                          0x08001f21   Thumb Code    26  deal.o(.text)
-    Clear_RxBuffer2                          0x08001f3b   Thumb Code    26  deal.o(.text)
-    Clear_IrRxBuffer1                        0x08001f55   Thumb Code     8  deal.o(.text)
-    Clear_IrRxBuffer2                        0x08001f5d   Thumb Code     8  deal.o(.text)
-    BL_Unpack                                0x08001f65   Thumb Code   342  deal.o(.text)
-    ESAM_Info                                0x080020bb   Thumb Code   158  deal.o(.text)
-    FlashWrite                               0x08002159   Thumb Code    34  deal.o(.text)
-    WriteFLAG                                0x0800217b   Thumb Code    32  deal.o(.text)
-    LoadFlash                                0x0800219b   Thumb Code    18  deal.o(.text)
+    main                                     0x080001c5   Thumb Code   812  main.o(.text)
+    NMI_Handler                              0x080005e1   Thumb Code     2  stm32f10x_it.o(.text)
+    HardFault_Handler                        0x080005e3   Thumb Code     4  stm32f10x_it.o(.text)
+    MemManage_Handler                        0x080005e7   Thumb Code     4  stm32f10x_it.o(.text)
+    BusFault_Handler                         0x080005eb   Thumb Code     4  stm32f10x_it.o(.text)
+    UsageFault_Handler                       0x080005ef   Thumb Code     4  stm32f10x_it.o(.text)
+    SVC_Handler                              0x080005f3   Thumb Code     2  stm32f10x_it.o(.text)
+    DebugMon_Handler                         0x080005f5   Thumb Code     2  stm32f10x_it.o(.text)
+    PendSV_Handler                           0x080005f7   Thumb Code     2  stm32f10x_it.o(.text)
+    SysTick_Handler                          0x080005f9   Thumb Code   848  stm32f10x_it.o(.text)
+    USART1_IRQHandler                        0x08000949   Thumb Code    90  stm32f10x_it.o(.text)
+    USART2_IRQHandler                        0x080009a3   Thumb Code   250  stm32f10x_it.o(.text)
+    USART3_IRQHandler                        0x08000a9d   Thumb Code   290  stm32f10x_it.o(.text)
+    TIM3_IRQHandler                          0x08000bbf   Thumb Code   190  stm32f10x_it.o(.text)
+    EXTI9_5_IRQHandler                       0x08000c7d   Thumb Code    34  stm32f10x_it.o(.text)
+    InitQue                                  0x08000d29   Thumb Code    30  dev.o(.text)
+    IsFull                                   0x08000d47   Thumb Code    36  dev.o(.text)
+    InsertQue                                0x08000d6b   Thumb Code    50  dev.o(.text)
+    IsEmpty                                  0x08000d9d   Thumb Code    22  dev.o(.text)
+    OutQueOneByte                            0x08000db3   Thumb Code    52  dev.o(.text)
+    OutQue                                   0x08000de7   Thumb Code   284  dev.o(.text)
+    AllOutQue                                0x08000f03   Thumb Code   126  dev.o(.text)
+    NumOfQue                                 0x08000f81   Thumb Code    74  dev.o(.text)
+    RCC_Configuration                        0x08000fcb   Thumb Code   170  dev.o(.text)
+    NVIC_Configuration                       0x08001075   Thumb Code   148  dev.o(.text)
+    GPIO_Configuration                       0x08001109   Thumb Code   418  dev.o(.text)
+    USART_Configuration                      0x080012ab   Thumb Code   140  dev.o(.text)
+    ISO7816_Enable                           0x08001337   Thumb Code   154  dev.o(.text)
+    ISO7816_Disable                          0x080013d1   Thumb Code    80  dev.o(.text)
+    SetUartState                             0x08001421   Thumb Code   182  dev.o(.text)
+    USART1send                               0x080014d7   Thumb Code    82  dev.o(.text)
+    USART2send                               0x08001529   Thumb Code    48  dev.o(.text)
+    USART3send                               0x08001559   Thumb Code    48  dev.o(.text)
+    TIM_Configuration                        0x08001589   Thumb Code   166  dev.o(.text)
+    PWM_Disable                              0x0800162f   Thumb Code    14  dev.o(.text)
+    PWM_Enable                               0x0800163d   Thumb Code    12  dev.o(.text)
+    IWDG_Configuration                       0x08001649   Thumb Code    52  dev.o(.text)
+    IR_GPIO_Init                             0x0800167d   Thumb Code   146  dev.o(.text)
+    EXTI9_5_DISABLE                          0x0800170f   Thumb Code    30  dev.o(.text)
+    EXTI9_5_ENABLE                           0x0800172d   Thumb Code    32  dev.o(.text)
+    Check_Rst                                0x0800174d   Thumb Code    86  dev.o(.text)
+    SysTick_Configuration                    0x080017a3   Thumb Code    74  dev.o(.text)
+    Hex2Bcd                                  0x080017ed   Thumb Code    26  dev.o(.text)
+    Bcd2Hex                                  0x08001807   Thumb Code    20  dev.o(.text)
+    CheckHE                                  0x0800184d   Thumb Code    98  deal.o(.text)
+    CheckSum                                 0x080018af   Thumb Code    60  deal.o(.text)
+    CheckDB                                  0x080018eb   Thumb Code   192  deal.o(.text)
+    Clear_RxBuffer3                          0x080019ab   Thumb Code    26  deal.o(.text)
+    Set_BL_Enter                             0x080019c5   Thumb Code    42  deal.o(.text)
+    PowerDown                                0x080019ef   Thumb Code    76  deal.o(.text)
+    Set_Sys                                  0x08001a3b   Thumb Code   756  deal.o(.text)
+    Send_req                                 0x08001d2f   Thumb Code   120  deal.o(.text)
+    PowerUp                                  0x08001da7   Thumb Code    38  deal.o(.text)
+    PowerOff                                 0x08001dcd   Thumb Code    44  deal.o(.text)
+    Set_BL_Exit                              0x08001df9   Thumb Code    28  deal.o(.text)
+    Req_BL                                   0x08001e15   Thumb Code   126  deal.o(.text)
+    SendOneByte                              0x08001e93   Thumb Code    64  deal.o(.text)
+    SendBytes                                0x08001ed3   Thumb Code    26  deal.o(.text)
+    Clear_RxBuffer1                          0x08001eed   Thumb Code    26  deal.o(.text)
+    Clear_RxBuffer2                          0x08001f07   Thumb Code    26  deal.o(.text)
+    Clear_IrRxBuffer1                        0x08001f21   Thumb Code    26  deal.o(.text)
+    Clear_IrRxBuffer2                        0x08001f3b   Thumb Code    26  deal.o(.text)
+    BL_Unpack                                0x08001f55   Thumb Code   484  deal.o(.text)
+    ESAM_Info                                0x08002139   Thumb Code    26  deal.o(.text)
+    FlashWrite                               0x08002153   Thumb Code    34  deal.o(.text)
+    WriteFLAG                                0x08002175   Thumb Code    32  deal.o(.text)
+    LoadFlash                                0x08002195   Thumb Code    18  deal.o(.text)
     delay_nms                                0x080021dd   Thumb Code    30  delay.o(.text)
     delay_nus                                0x080021fb   Thumb Code    26  delay.o(.text)
     ESAM_Reset                               0x08002215   Thumb Code    56  esam.o(.text)
@@ -1038,79 +1038,78 @@ Image Symbol Table
     time_sleep                               0x20000028   Data           4  main.o(.data)
     BL_TIME                                  0x2000002c   Data           2  main.o(.data)
     POW_TIME                                 0x2000002e   Data           2  main.o(.data)
-    QUE_TIME                                 0x20000030   Data           2  main.o(.data)
-    M_Time                                   0x20000032   Data           2  main.o(.data)
-    GET_ESAM                                 0x20000034   Data           1  main.o(.data)
-    Bat_Low                                  0x20000035   Data           1  main.o(.data)
-    Bat_FLAG                                 0x20000036   Data           1  main.o(.data)
-    W_Mode                                   0x20000037   Data           1  main.o(.data)
-    W_BaudRate                               0x20000038   Data           1  main.o(.data)
-    W_Parity                                 0x20000039   Data           1  main.o(.data)
-    W_Time                                   0x2000003a   Data           1  main.o(.data)
-    W_Code                                   0x2000003b   Data           4  main.o(.data)
-    W_Bat                                    0x20000040   Data           2  main.o(.data)
-    RZ_Counter                               0x20000044   Data           4  main.o(.data)
-    BYTE                                     0x20000048   Data           1  main.o(.data)
-    TX_FLAG                                  0x20000049   Data           1  main.o(.data)
-    RX_FLAG                                  0x2000004a   Data           1  main.o(.data)
-    CountTX                                  0x2000004b   Data           1  main.o(.data)
-    Send_bit                                 0x2000004c   Data           1  main.o(.data)
-    Tx_bit                                   0x2000004d   Data           1  main.o(.data)
-    Tx_Parity                                0x2000004e   Data           1  main.o(.data)
-    tmp_data                                 0x2000004f   Data           1  main.o(.data)
-    CountRX                                  0x20000050   Data           1  main.o(.data)
-    Receive_bit                              0x20000051   Data           1  main.o(.data)
-    Rx_Start                                 0x20000052   Data           1  main.o(.data)
-    Rx_Parity                                0x20000053   Data           1  main.o(.data)
-    IrDARxCounter                            0x20000054   Data           2  main.o(.data)
-    Buf1_FULL                                0x20000056   Data           1  main.o(.data)
-    Buf2_FULL                                0x20000057   Data           1  main.o(.data)
-    Clear_Flag                               0x20000058   Data           1  main.o(.data)
-    IrRxCounter1                             0x2000005a   Data           2  main.o(.data)
-    IrRxCounter2                             0x2000005c   Data           2  main.o(.data)
-    IR_BaudRate_Time                         0x2000005e   Data           2  main.o(.data)
-    AT_FLAG                                  0x20000060   Data           1  main.o(.data)
-    OK                                       0x20000061   Data           1  main.o(.data)
-    TrasferMode                              0x20000062   Data           1  main.o(.data)
-    BL_REQ_FLAG                              0x20000063   Data           1  main.o(.data)
-    IR_TC                                    0x20000064   Data           1  main.o(.data)
-    Rs485_TC                                 0x20000065   Data           1  main.o(.data)
-    IR_DB_RZ                                 0x20000066   Data           1  main.o(.data)
-    ZF_LEN                                   0x20000067   Data           1  main.o(.data)
-    Ver_flag                                 0x20000068   Data           1  main.o(.data)
-    IR_to_BL                                 0x20000069   Data           1  main.o(.data)
-    POW_IR                                   0x2000006a   Data           1  main.o(.data)
-    TimingDelay                              0x2000006c   Data           4  main.o(.data)
-    Usart3_Wtime                             0x20000070   Data           2  main.o(.data)
-    Usart3_EN                                0x20000072   Data           1  main.o(.data)
-    IR_Wtime                                 0x20000074   Data           2  main.o(.data)
-    Buf_Flag                                 0x20000076   Data           1  main.o(.data)
-    IrTimeBegin                              0x20000077   Data           1  main.o(.data)
-    FLASHStatus                              0x20000078   Data           1  deal.o(.data)
-    ESAMID                                   0x20000079   Data           8  esam.o(.data)
-    ESAMRand1                                0x20000081   Data           8  esam.o(.data)
-    ESAMEncData1                             0x20000089   Data           8  esam.o(.data)
-    ESAMEncData2                             0x20000091   Data           8  esam.o(.data)
-    DBRand2                                  0x20000099   Data           8  esam.o(.data)
-    DBEncData1                               0x200000a1   Data           8  esam.o(.data)
-    DBESAMID                                 0x200000a9   Data           8  esam.o(.data)
-    SystemCoreClock                          0x200000c8   Data           4  system_stm32f10x.o(.data)
-    AHBPrescTable                            0x200000cc   Data          16  system_stm32f10x.o(.data)
-    RxTmp                                    0x200000dc   Data          32  main.o(.bss)
-    RxTmp2                                   0x200000fc   Data          32  main.o(.bss)
-    RxQUE1                                   0x2000011c   Data         514  main.o(.bss)
-    RxQUE3                                   0x2000031e   Data         514  main.o(.bss)
-    IR_Buf1                                  0x20000520   Data         514  main.o(.bss)
-    IR_Buf2                                  0x20000722   Data         514  main.o(.bss)
-    RxBuffer1                                0x20000924   Data         256  main.o(.bss)
-    RxBuffer2                                0x20000a24   Data         256  main.o(.bss)
-    RxBuffer3                                0x20000b24   Data         256  main.o(.bss)
-    IrDARxBuffer1                            0x20000c24   Data         256  main.o(.bss)
-    IrBuf1                                   0x20000d24   Data         100  main.o(.bss)
-    IrBuf2                                   0x20000d88   Data         100  main.o(.bss)
-    ADC_ConvertedValue                       0x20000dec   Data          24  myadc.o(.bss)
-    __libspace_start                         0x20000e04   Data          96  libspace.o(.bss)
-    __temporary_stack_top$libspace           0x20000e64   Data           0  libspace.o(.bss)
+    M_Time                                   0x20000030   Data           2  main.o(.data)
+    GET_ESAM                                 0x20000032   Data           1  main.o(.data)
+    Bat_Low                                  0x20000033   Data           1  main.o(.data)
+    Bat_FLAG                                 0x20000034   Data           1  main.o(.data)
+    W_Mode                                   0x20000035   Data           1  main.o(.data)
+    W_BaudRate                               0x20000036   Data           1  main.o(.data)
+    W_Parity                                 0x20000037   Data           1  main.o(.data)
+    W_Time                                   0x20000038   Data           1  main.o(.data)
+    W_Code                                   0x20000039   Data           4  main.o(.data)
+    W_Bat                                    0x2000003e   Data           2  main.o(.data)
+    RZ_Counter                               0x20000040   Data           4  main.o(.data)
+    BYTE                                     0x20000044   Data           1  main.o(.data)
+    TX_FLAG                                  0x20000045   Data           1  main.o(.data)
+    RX_FLAG                                  0x20000046   Data           1  main.o(.data)
+    CountTX                                  0x20000047   Data           1  main.o(.data)
+    Send_bit                                 0x20000048   Data           1  main.o(.data)
+    Tx_bit                                   0x20000049   Data           1  main.o(.data)
+    Tx_Parity                                0x2000004a   Data           1  main.o(.data)
+    tmp_data                                 0x2000004b   Data           1  main.o(.data)
+    CountRX                                  0x2000004c   Data           1  main.o(.data)
+    Receive_bit                              0x2000004d   Data           1  main.o(.data)
+    Rx_Start                                 0x2000004e   Data           1  main.o(.data)
+    Rx_Parity                                0x2000004f   Data           1  main.o(.data)
+    IrDARxCounter                            0x20000050   Data           2  main.o(.data)
+    Buf1_FULL                                0x20000052   Data           1  main.o(.data)
+    Buf2_FULL                                0x20000053   Data           1  main.o(.data)
+    Clear_Flag                               0x20000054   Data           1  main.o(.data)
+    IrRxCounter1                             0x20000056   Data           2  main.o(.data)
+    IrRxCounter2                             0x20000058   Data           2  main.o(.data)
+    IR_BaudRate_Time                         0x2000005a   Data           2  main.o(.data)
+    AT_FLAG                                  0x2000005c   Data           1  main.o(.data)
+    OK                                       0x2000005d   Data           1  main.o(.data)
+    TrasferMode                              0x2000005e   Data           1  main.o(.data)
+    BL_REQ_FLAG                              0x2000005f   Data           1  main.o(.data)
+    IR_TC                                    0x20000060   Data           1  main.o(.data)
+    Rs485_TC                                 0x20000061   Data           1  main.o(.data)
+    IR_DB_RZ                                 0x20000062   Data           1  main.o(.data)
+    ZF_LEN                                   0x20000063   Data           1  main.o(.data)
+    Ver_flag                                 0x20000064   Data           1  main.o(.data)
+    IR_to_BL                                 0x20000065   Data           1  main.o(.data)
+    POW_IR                                   0x20000066   Data           1  main.o(.data)
+    TimingDelay                              0x20000068   Data           4  main.o(.data)
+    Usart3_Wtime                             0x2000006c   Data           2  main.o(.data)
+    Usart3_EN                                0x2000006e   Data           1  main.o(.data)
+    IR_Wtime                                 0x20000070   Data           2  main.o(.data)
+    Buf_Flag                                 0x20000072   Data           1  main.o(.data)
+    IrTimeBegin                              0x20000073   Data           1  main.o(.data)
+    FLASHStatus                              0x20000074   Data           1  deal.o(.data)
+    ESAMID                                   0x20000075   Data           8  esam.o(.data)
+    ESAMRand1                                0x2000007d   Data           8  esam.o(.data)
+    ESAMEncData1                             0x20000085   Data           8  esam.o(.data)
+    ESAMEncData2                             0x2000008d   Data           8  esam.o(.data)
+    DBRand2                                  0x20000095   Data           8  esam.o(.data)
+    DBEncData1                               0x2000009d   Data           8  esam.o(.data)
+    DBESAMID                                 0x200000a5   Data           8  esam.o(.data)
+    SystemCoreClock                          0x200000c4   Data           4  system_stm32f10x.o(.data)
+    AHBPrescTable                            0x200000c8   Data          16  system_stm32f10x.o(.data)
+    RxTmp                                    0x200000d8   Data          32  main.o(.bss)
+    RxTmp2                                   0x200000f8   Data          32  main.o(.bss)
+    RxQUE1                                   0x20000118   Data         514  main.o(.bss)
+    RxQUE3                                   0x2000031a   Data         514  main.o(.bss)
+    IR_Buf1                                  0x2000051c   Data         514  main.o(.bss)
+    IR_Buf2                                  0x2000071e   Data         514  main.o(.bss)
+    RxBuffer1                                0x20000920   Data         256  main.o(.bss)
+    RxBuffer2                                0x20000a20   Data         256  main.o(.bss)
+    RxBuffer3                                0x20000b20   Data         256  main.o(.bss)
+    IrDARxBuffer1                            0x20000c20   Data         256  main.o(.bss)
+    IrBuf1                                   0x20000d20   Data          50  main.o(.bss)
+    IrBuf2                                   0x20000d52   Data          50  main.o(.bss)
+    ADC_ConvertedValue                       0x20000d84   Data          24  myadc.o(.bss)
+    __libspace_start                         0x20000d9c   Data          96  libspace.o(.bss)
+    __temporary_stack_top$libspace           0x20000dfc   Data           0  libspace.o(.bss)
 
 
 
@@ -1120,7 +1119,7 @@ Memory Map of the image
 
   Image Entry point : 0x08000121
 
-  Load Region LR_IROM1 (Base: 0x08000000, Size: 0x0000617c, Max: 0x00010000, ABSOLUTE)
+  Load Region LR_IROM1 (Base: 0x08000000, Size: 0x00006178, Max: 0x00010000, ABSOLUTE)
 
     Execution Region ER_IROM1 (Base: 0x08000000, Size: 0x000060a0, Max: 0x00010000, ABSOLUTE)
 
@@ -1174,10 +1173,10 @@ Memory Map of the image
     0x080001ba   0x00000000   Code   RO          660    .ARM.Collect$$rtexit$$00000002  c_w.l(rtexit2.o)
     0x080001ba   0x00000004   Code   RO          661    .ARM.Collect$$rtexit$$00000003  c_w.l(rtexit2.o)
     0x080001be   0x00000006   Code   RO          662    .ARM.Collect$$rtexit$$00000004  c_w.l(rtexit2.o)
-    0x080001c4   0x0000043c   Code   RO            1    .text               main.o
-    0x08000600   0x0000073c   Code   RO          112    .text               stm32f10x_it.o
-    0x08000d3c   0x00000b44   Code   RO          135    .text               dev.o
-    0x08001880   0x0000095c   Code   RO          151    .text               deal.o
+    0x080001c4   0x0000041c   Code   RO            1    .text               main.o
+    0x080005e0   0x00000728   Code   RO          112    .text               stm32f10x_it.o
+    0x08000d08   0x00000b44   Code   RO          135    .text               dev.o
+    0x0800184c   0x00000990   Code   RO          151    .text               deal.o
     0x080021dc   0x00000038   Code   RO          173    .text               delay.o
     0x08002214   0x00000d34   Code   RO          185    .text               esam.o
     0x08002f48   0x00000254   Code   RO          200    .text               myadc.o
@@ -1218,22 +1217,22 @@ Memory Map of the image
     0x08006080   0x00000020   Data   RO          735    Region$$Table       anon$$obj.o
 
 
-    Execution Region RW_IRAM1 (Base: 0x20000000, Size: 0x00001468, Max: 0x00002000, ABSOLUTE)
+    Execution Region RW_IRAM1 (Base: 0x20000000, Size: 0x00001400, Max: 0x00002000, ABSOLUTE)
 
     Base Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x20000000   0x00000078   Data   RW            3    .data               main.o
-    0x20000078   0x00000001   Data   RW          152    .data               deal.o
-    0x20000079   0x00000038   Data   RW          186    .data               esam.o
-    0x200000b1   0x00000014   Data   RW          396    .data               stm32f10x_rcc.o
-    0x200000c5   0x00000003   PAD
-    0x200000c8   0x00000014   Data   RW          490    .data               system_stm32f10x.o
-    0x200000dc   0x00000d10   Zero   RW            2    .bss                main.o
-    0x20000dec   0x00000018   Zero   RW          201    .bss                myadc.o
-    0x20000e04   0x00000060   Zero   RW          612    .bss                c_w.l(libspace.o)
-    0x20000e64   0x00000004   PAD
-    0x20000e68   0x00000200   Zero   RW          482    HEAP                startup_stm32f10x_md_vl.o
-    0x20001068   0x00000400   Zero   RW          481    STACK               startup_stm32f10x_md_vl.o
+    0x20000000   0x00000074   Data   RW            3    .data               main.o
+    0x20000074   0x00000001   Data   RW          152    .data               deal.o
+    0x20000075   0x00000038   Data   RW          186    .data               esam.o
+    0x200000ad   0x00000014   Data   RW          396    .data               stm32f10x_rcc.o
+    0x200000c1   0x00000003   PAD
+    0x200000c4   0x00000014   Data   RW          490    .data               system_stm32f10x.o
+    0x200000d8   0x00000cac   Zero   RW            2    .bss                main.o
+    0x20000d84   0x00000018   Zero   RW          201    .bss                myadc.o
+    0x20000d9c   0x00000060   Zero   RW          612    .bss                c_w.l(libspace.o)
+    0x20000dfc   0x00000004   PAD
+    0x20000e00   0x00000200   Zero   RW          482    HEAP                startup_stm32f10x_md_vl.o
+    0x20001000   0x00000400   Zero   RW          481    STACK               startup_stm32f10x_md_vl.o
 
 
 ==============================================================================
@@ -1243,11 +1242,11 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-      2396        270          0          1          0       6410   deal.o
+      2448        286          0          1          0       6490   deal.o
         56          0          0          0          0        650   delay.o
       2884         94          0          0          0      22523   dev.o
       3380        330          0         56          0      10096   esam.o
-      1084        216          0        120       3344     305532   main.o
+      1052        214          0        116       3244     305479   main.o
        220         22          0          0          0       1857   misc.o
        596         40          0          0         24       1949   myadc.o
         56         22        288          0       1536        920   startup_stm32f10x_md_vl.o
@@ -1257,7 +1256,7 @@ Image component sizes
        284         10          0          0          0       2291   stm32f10x_exti.o
       1468         34          0          0          0       8090   stm32f10x_flash.o
        860         38          0          0          0       5705   stm32f10x_gpio.o
-      1852        258          0          0          0       9241   stm32f10x_it.o
+      1832        256          0          0          0       9204   stm32f10x_it.o
         64          6          0          0          0       1285   stm32f10x_iwdg.o
        204         14          0          0          0       1935   stm32f10x_pwr.o
        964         42          0         20          0       9214   stm32f10x_rcc.o
@@ -1266,7 +1265,7 @@ Image component sizes
        540         34          0         20          0       1867   system_stm32f10x.o
 
     ----------------------------------------------------------------------
-     23448       1582        320        220       4904     438980   Object Totals
+     23448       1594        320        216       4804     438970   Object Totals
          0          0         32          0          0          0   (incl. Generated)
          4          0          0          3          0          0   (incl. Padding)
 
@@ -1326,15 +1325,15 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     24374       1614        362        220       5004     437256   Grand Totals
-     24374       1614        362        220       5004     437256   ELF Image Totals
-     24374       1614        362        220          0          0   ROM Totals
+     24374       1626        362        216       4904     437246   Grand Totals
+     24374       1626        362        216       4904     437246   ELF Image Totals
+     24374       1626        362        216          0          0   ROM Totals
 
 ==============================================================================
 
     Total RO  Size (Code + RO Data)                24736 (  24.16kB)
-    Total RW  Size (RW Data + ZI Data)              5224 (   5.10kB)
-    Total ROM Size (Code + RO Data + RW Data)      24956 (  24.37kB)
+    Total RW  Size (RW Data + ZI Data)              5120 (   5.00kB)
+    Total ROM Size (Code + RO Data + RW Data)      24952 (  24.37kB)
 
 ==============================================================================
 

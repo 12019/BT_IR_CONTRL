@@ -34,7 +34,7 @@
 #define		MAXOFRXQ	0x200
 #define		MAXBUFFER	0x100
 
-#define		MAXIRBUFLEN	100
+#define		MAXIRBUFLEN	50
 
 #define		VBAT_MAX	0x930
 #define		VBAT_MIN	0x800
@@ -71,7 +71,7 @@
 #define	IRREQ_TIMES	0x10
 
 #define Byte_Time		50
-#define Byte_Time_BL 100
+#define Byte_Time_BL 200
  
 #define COM0	0				//ºìÍâ
 #define COM1	1				//´®¿Ú
@@ -219,7 +219,7 @@ EXT_ u32 time_sleep;
 //EXT_ u16 ADC_time;
 EXT_ u16 BL_TIME;
 EXT_ u16 POW_TIME; 		
-EXT_ u16 QUE_TIME;
+//EXT_ u16 QUE_TIME;
 EXT_ u16 M_Time;
 
 EXT_ u8 GET_ESAM;

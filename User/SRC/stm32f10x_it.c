@@ -357,6 +357,7 @@ void USART3_IRQHandler(void)
 	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)//接收寄存器满中断
 	{
 		time_sleep = 0;
+		POW_TIME = 0;
 		
 		if(BL_REQ_FLAG == 1)//读参数应答第一帧数据
 		{
@@ -368,8 +369,6 @@ void USART3_IRQHandler(void)
 			if(TrasferMode == 0)//透传字节转发
 			{
 				InsertQue(&RxQUE3,USART_ReceiveData(USART3));
-				
-				POW_TIME = 0;
 				
 				if(W_Mode == IRDAMODE)//红外通道透传
 				{
@@ -384,7 +383,7 @@ void USART3_IRQHandler(void)
 			else//协议支持  TrasferMode:03=红外抄表	04=ESAM
 			{
 					POW_IR = 1;
-					POW_TIME = 0;
+					
 				/* Read one byte from the receive data register */
 					RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);
 					if(Usart3_EN == 0)
@@ -442,7 +441,7 @@ void TIM3_IRQHandler(void)//帧数据结束计时器
 		
 			POW_TIME++;
 		
-			QUE_TIME++;
+//			QUE_TIME++;
 		
 			if(BL_STA == 1)//BL未连接
 			{

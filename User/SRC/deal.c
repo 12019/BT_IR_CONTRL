@@ -508,22 +508,22 @@ void Clear_RxBuffer3(void)
 
 void Clear_IrRxBuffer1(void)
 {
-//	u16 i;
+	u16 i;
 	IrRxCounter1 = 0;
-//	for(i=0;i<MAXIRBUFLEN;i++)
-//	{
-//		IrBuf1[i] = 0x00;
-//	}
+	for(i=0;i<MAXIRBUFLEN;i++)
+	{
+		IrBuf1[i] = 0x00;
+	}
 }
 
 void Clear_IrRxBuffer2(void)
 {
-//	u16 i;
+	u16 i;
 	IrRxCounter2 = 0;
-//	for(i=0;i<MAXIRBUFLEN;i++)
-//	{
-//		IrBuf2[i] = 0x00;
-//	}
+	for(i=0;i<MAXIRBUFLEN;i++)
+	{
+		IrBuf2[i] = 0x00;
+	}
 }
 
 void BL_Unpack(u8 *Buffer, u16 Length)//蓝牙数据解包
