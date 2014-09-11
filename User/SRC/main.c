@@ -180,12 +180,12 @@ if(0 == LoadFlash())//Œ¥…Ë÷√BL
 					IrTimeBegin = 0;
 					IR_Wtime = 0;
 					
-					if(Buf_Flag == 1)
+					if((Buf_Flag == 1) && (IrRxCounter1!=0))
 					{
 						USART3send(IrBuf1,IrRxCounter1);
 						IrRxCounter1 = 0;
 					}
-					else if(Buf_Flag == 2)
+					else if((Buf_Flag == 2) && (IrRxCounter2!=0))
 					{
 						USART3send(IrBuf2,IrRxCounter2);
 						IrRxCounter2 = 0;
