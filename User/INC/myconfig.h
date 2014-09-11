@@ -216,10 +216,8 @@ EXT_ u8 timed;
 EXT_ u8 sysread;
 
 EXT_ u32 time_sleep;
-//EXT_ u16 ADC_time;
 EXT_ u16 BL_TIME;
 EXT_ u16 POW_TIME; 		
-//EXT_ u16 QUE_TIME;
 EXT_ u16 M_Time;
 
 EXT_ u8 GET_ESAM;
@@ -253,8 +251,6 @@ EXT_ vu16 IrDARxCounter;
 EXT_ u8 IrDARxBuffer1[MAXBUFFER];
 
 EXT_ u8 Buf1_FULL,Buf2_FULL;
-
-EXT_ u8 Clear_Flag;
 
 EXT_ vu16 IrRxCounter1;
 EXT_ vu16 IrRxCounter2;

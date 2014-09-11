@@ -73,7 +73,6 @@ if(0 == LoadFlash())//未设置BL
 	
  	PowerOff();
 	
-	Clear_Flag = 0;
 	GET_ESAM = 0;//默认关闭ESAM数据获取
 	IrTimeBegin = 0;
 	Buf_Flag = 1;//默认IR_Buf1接收
@@ -89,7 +88,6 @@ if(0 == LoadFlash())//未设置BL
 	BL_TIME = 0;
 	Bat_Low = 0;
 	Bat_FLAG = 0;
-//	ADC_time = 0;
 	POW_TIME = 0;
 	BL_REQ_FLAG = 0;//读参数应答数据帧标志
 	TX_FLAG = 0;
@@ -133,12 +131,8 @@ if(0 == LoadFlash())//未设置BL
 			while(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
 			{
 				OutQueOneByte(&RxQUE3,&IrData);
-				if(Clear_Flag)
-				{
-					Clear_Flag = 0;
-					IrRxCounter1 = 0;
-					IrRxCounter2 = 0;
-				}
+				IrRxCounter1 = 0;
+				IrRxCounter2 = 0;
 				SendOneByte(IrData);
 			}
 		}
@@ -181,58 +175,44 @@ if(0 == LoadFlash())//未设置BL
 		
 		if(IR_to_BL == 1)//数据回传
 		{
+				if(IR_Wtime >= Byte_Time_BL)
+				{
+					IrTimeBegin = 0;
+					IR_Wtime = 0;
+					
+					if(Buf_Flag == 1)
+					{
+						USART3send(IrBuf1,IrRxCounter1);
+						IrRxCounter1 = 0;
+					}
+					else if(Buf_Flag == 2)
+					{
+						USART3send(IrBuf2,IrRxCounter2);
+						IrRxCounter2 = 0;
+					}
+				}
+			
 				if(Buf1_FULL)
 				{
 					USART3send(IrBuf1,MAXIRBUFLEN);
 					Buf1_FULL = 0;
-					Clear_IrRxBuffer1();
+					IrRxCounter1 = 0;
 				}
 				else if(Buf2_FULL)
 				{
 					USART3send(IrBuf2,MAXIRBUFLEN);
 					Buf2_FULL = 0;
-					Clear_IrRxBuffer2();
+					IrRxCounter2 = 0;
 				}
-
-					if(IR_Wtime >= Byte_Time_BL)
-					{
-						IrTimeBegin = 0;
-						IR_Wtime = 0;
-						
-						if(Buf_Flag == 1)
-						{
-							USART3send(IrBuf1,IrRxCounter1);
-							Clear_IrRxBuffer1();
-						}
-						else if(Buf_Flag == 2)
-						{
-							USART3send(IrBuf2,IrRxCounter2);
-							Clear_IrRxBuffer2();
-						}
-					}
 		}
 		
-//	if(QUE_TIME>=5000)//清队列
-//	{
-//		InitQue(&RxQUE1);//485接收队列
-//	//	InitQue(&RxQUE2);//红外接收队列
-//		InitQue(&RxQUE3);//蓝牙接收队列
-//		QUE_TIME = 0;
-//	}
-		
-	if(POW_TIME>=M_Time*1000)//关IR or 485
-	{
-		POW_TIME = 0;
-		PWM_Disable();
-		PWR_IR_OFF();
-		PWR_485_OFF();
-	}
-
-//		if(ADC_time >= 5000)
-//		{
-//			ADC_time = 0;
-//			ADC_filter();
-//		}
+		if(POW_TIME>=M_Time*1000)//关IR or 485
+		{
+			POW_TIME = 0;
+			PWM_Disable();
+			PWR_IR_OFF();
+			PWR_485_OFF();
+		}
 	
 		if(Bat_Low&&((W_Time*60*1000-time_sleep)>120000))//电量低且时间大于2MIN
 		{

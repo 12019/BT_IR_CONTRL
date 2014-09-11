@@ -250,8 +250,7 @@ void SysTick_Handler(void)
 					}
 					else 
 					{		
-						IR_to_BL = 1;
-						
+						IR_to_BL = 1;		
 						if(Buf_Flag == 1)
 						{
 							if(IrRxCounter1 >= MAXIRBUFLEN)
@@ -288,7 +287,6 @@ void SysTick_Handler(void)
 		}
 		IR_Wtime = 0;
 		IrTimeBegin = 1;
-		Clear_Flag = 1;
 	}	
 }
 
@@ -437,11 +435,7 @@ void TIM3_IRQHandler(void)//帧数据结束计时器
 		
 			time_sleep++;
 		
-//		  ADC_time++;
-		
 			POW_TIME++;
-		
-//			QUE_TIME++;
 		
 			if(BL_STA == 1)//BL未连接
 			{
