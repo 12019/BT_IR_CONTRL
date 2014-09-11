@@ -251,32 +251,29 @@ void SysTick_Handler(void)
 					else 
 					{		
 						IR_to_BL = 1;		
-						if(Buf_Flag == 1)
-						{
-							if(IrRxCounter1 >= MAXIRBUFLEN)
-							{					
-								IrRxCounter2 = 0;
-								IrBuf2[IrRxCounter2++] = tmp_data;
-								
-								IrRxCounter1 = 0;
-								Buf_Flag = 2;
-								Buf1_FULL = 1;
-							}
-							else IrBuf1[IrRxCounter1++] = tmp_data;
-						}
-						else if(Buf_Flag == 2)
-						{		
-							if(IrRxCounter2 >= MAXIRBUFLEN)
-							{
-								IrRxCounter1 = 0;
-								IrBuf1[IrRxCounter1++] = tmp_data;
-								
-								IrRxCounter2 = 0;
-								Buf_Flag = 1;
-								Buf2_FULL = 1;
-							}
-							else IrBuf2[IrRxCounter2++] = tmp_data;
-						}		
+						InsertQue(&IR_Buf1,tmp_data);
+//						if((Buf_Flag == 1)&&(IrRxCounter1 < MAXIRBUFLEN))
+//						{
+//							IrBuf1[IrRxCounter1++] = tmp_data;
+//						}
+//						else if((Buf_Flag == 1)&&(IrRxCounter1 == MAXIRBUFLEN))
+//						{
+//							IrRxCounter2 = 0;
+//							IrBuf2[IrRxCounter2++] = tmp_data;
+//							Buf_Flag = 2;
+//							Buf1_FULL = 1;
+//						}
+//						else if((Buf_Flag == 2)&&(IrRxCounter2 < MAXIRBUFLEN))
+//						{
+//							IrBuf2[IrRxCounter2++] = tmp_data;
+//						}
+//						else if((Buf_Flag == 2)&&(IrRxCounter2 == MAXIRBUFLEN))
+//						{
+//							IrRxCounter1 = 0;
+//							IrBuf1[IrRxCounter1++] = tmp_data;
+//							Buf_Flag = 1;
+//							Buf2_FULL = 1;
+//						}	
 					}
 				}
 				RX_FLAG = 0;
