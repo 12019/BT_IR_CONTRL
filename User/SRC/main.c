@@ -75,11 +75,7 @@ if(0 == LoadFlash())//未设置BL
 	
 	GET_ESAM = 0;//默认关闭ESAM数据获取
 	IrTimeBegin = 0;
-	Buf_Flag = 1;//默认IR_Buf1接收
-	IrRxCounter1 = 0;
-	IrRxCounter2 = 0;
-	Buf1_FULL = 0;
-	Buf2_FULL = 0;
+	IrRxCounter = 0;
 	POW_IR = 1;
 	OK = 0;
 	Ver_flag = 0;
@@ -105,13 +101,9 @@ if(0 == LoadFlash())//未设置BL
 	IR_BaudRate_Time = 83;//IR BaudRate
 	
 	InitQue(&RxQUE1);//485接收队列
-//	InitQue(&RxQUE2);//红外接收队列
+	InitQue(&RxQUE2);//红外接收队列
 	InitQue(&RxQUE3);//蓝牙接收队列
-	
-	Clear_IrRxBuffer1();
-	Clear_IrRxBuffer2();
 
-//	Clear_RxBuffer1();
 	Clear_RxBuffer2();
 	Clear_RxBuffer3();
 	
@@ -131,7 +123,7 @@ if(0 == LoadFlash())//未设置BL
 			while(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
 			{
 				OutQueOneByte(&RxQUE3,&IrData);
-				InitQue(&IR_Buf1);
+				ResetQue(&RxQUE2);
 				SendOneByte(IrData);
 			}
 		}
@@ -163,33 +155,24 @@ if(0 == LoadFlash())//未设置BL
 			}
 		}
 		
-//if(IR_to_BL == 1)//数据回传
-//{
-//	if(IsEmpty(&RxQUE2) != QUEEMP)//队列非空
-//	{
-//		OutQue(&RxQUE2,&Tx_Data,1);
-//		USART3send(&Tx_Data,1);//IR数据透传给BL
-//	}
-//}
-		
 		if(IR_to_BL == 1)//数据回传
 		{
-			if(NumOfQue(&IR_Buf1) > MAXIRBUFLEN)
+			if(NumOfQue(&RxQUE2) > MAXIRBUFLEN)
 			{
-				OutQue(&IR_Buf1,IrBuf1,MAXIRBUFLEN);
-				USART3send(IrBuf1,MAXIRBUFLEN);
+				OutQue(&RxQUE2,IrBuf,MAXIRBUFLEN);
+				USART3send(IrBuf,MAXIRBUFLEN);
 			}
 			else if(IR_Wtime >= Byte_Time_BL)
+			{
+				IrTimeBegin = 0;
+				IR_Wtime = 0;
+				IrRxCounter = NumOfQue(&RxQUE2);
+				if(IrRxCounter > 0)
 				{
-					IrTimeBegin = 0;
-					IR_Wtime = 0;
-					IrRxCounter1 = NumOfQue(&IR_Buf1);
-					if(IrRxCounter1 >0)
-					{
-						OutQue(&IR_Buf1,IrBuf1,IrRxCounter1);
-						USART3send(IrBuf1,IrRxCounter1);						
-					}
-				}			
+					OutQue(&RxQUE2,IrBuf,IrRxCounter);
+					USART3send(IrBuf,IrRxCounter);						
+				}
+			}			
 		}
 		
 		if(POW_TIME>=M_Time*1000)//关IR or 485

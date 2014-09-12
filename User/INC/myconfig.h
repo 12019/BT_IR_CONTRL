@@ -183,11 +183,8 @@ EXT_ u8	RxTmp2[0x20];
 EXT_ u8 Rx2len;
 	
 EXT_ Quque RxQUE1;
-//EXT_ Quque RxQUE2;
+EXT_ Quque RxQUE2;
 EXT_ Quque RxQUE3;
-	
-EXT_ Quque IR_Buf1;
-EXT_ Quque IR_Buf2;	
 	
 EXT_ u8 *TxBuffer1;
 EXT_ u8 RxBuffer1[MAXBUFFER];
@@ -251,12 +248,9 @@ EXT_ u8 Rx_Parity_tmp;
 EXT_ vu16 IrDARxCounter;
 EXT_ u8 IrDARxBuffer1[MAXBUFFER];
 
-EXT_ u8 Buf1_FULL,Buf2_FULL;
+EXT_ vu16 IrRxCounter;
 
-EXT_ vu16 IrRxCounter1;
-EXT_ vu16 IrRxCounter2;
-EXT_ u8 IrBuf1[MAXIRBUFLEN];
-EXT_ u8 IrBuf2[MAXIRBUFLEN];
+EXT_ u8 IrBuf[MAXIRBUFLEN];
 
 EXT_ u16 IR_BaudRate_Time;
 
@@ -279,7 +273,7 @@ EXT_ vu8 	Usart3_EN;		//串口3蓝牙接收数据有效
 
 EXT_ vu16 IR_Wtime;
 
-EXT_ vu8 Buf_Flag;
+//EXT_ vu8 Buf_Flag;
 EXT_ vu8 IrTimeBegin;
 
 /** @defgroup config_Exported_Functions
@@ -287,6 +281,7 @@ EXT_ vu8 IrTimeBegin;
   */
 /*******队列操作函数区*************/
 void InitQue(Quque *q);
+void ResetQue(Quque *q);
 u8 IsFull(Quque *q);
 u8 InsertQue(Quque *q,u8 elem);
 u8 IsEmpty(Quque *q);

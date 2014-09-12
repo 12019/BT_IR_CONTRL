@@ -10,14 +10,19 @@
 *******************************************************************************/
 void InitQue(Quque *q)
 {
-//	u16 i;
+	u16 i;
 	q->head = 0;
 	q->tail = 0;
 
-//	for(i=0;i<MAXOFRXQ;i++)
-//	{
-//		q->elem[i] = 0x00;
-//	}
+	for(i=0;i<MAXOFRXQ;i++)
+	{
+		q->elem[i] = 0x00;
+	}
+}
+void ResetQue(Quque *q)
+{
+	q->head = 0;
+	q->tail = 0;
 }
 
 u8 IsFull(Quque *q)
@@ -916,3 +921,4 @@ void GetBuildTime(unsigned char *date)
 	date[2] = Hex2Bcd((unsigned char)(year%100));	
 	date[3] = (char)(sec+min+hour);
 }
+

@@ -245,7 +245,7 @@ void SysTick_Handler(void)
 					else 
 					{		
 						IR_to_BL = 1;		
-						InsertQue(&IR_Buf1,tmp_data);
+						InsertQue(&RxQUE2,tmp_data);
 					}
 				}
 				RX_FLAG = 0;

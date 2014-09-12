@@ -340,6 +340,7 @@ void Send_req(void)//读参数
 	u8 req[] = {0xA9, 0x12, 0x80,            0x02, 0x00,0x00,0x00,0x00, 0x00,0x00, 0x00,   0x00,0x00,0x00,0x00,0x00, 0x00,   0x16};//读参数 数据域附带密钥剩余认证次数(4BYTE)和剩余电量信息(2BYTE)
 	u8 i;
 	u8 temp[5];
+		
 	req[4] = (RZ_Counter&0xff000000)>>24;
 	req[5] = (RZ_Counter&0xff0000)>>16;
 	req[6] = (RZ_Counter&0xff00)>>8;
@@ -351,6 +352,7 @@ void Send_req(void)//读参数
 	req[10] = XVER;
 		
 	GetBuildTime(temp);
+	
 	req[11] = SVER;
 	req[12] = 0x20;
 	req[13] = temp[2];
@@ -515,25 +517,25 @@ void Clear_RxBuffer3(void)
 	}
 }
 
-void Clear_IrRxBuffer1(void)
-{
-	u16 i;
-	IrRxCounter1 = 0;
-	for(i=0;i<MAXIRBUFLEN;i++)
-	{
-		IrBuf1[i] = 0x00;
-	}
-}
+//void Clear_IrRxBuffer1(void)
+//{
+//	u16 i;
+//	IrRxCounter1 = 0;
+//	for(i=0;i<MAXIRBUFLEN;i++)
+//	{
+//		IrBuf1[i] = 0x00;
+//	}
+//}
 
-void Clear_IrRxBuffer2(void)
-{
-	u16 i;
-	IrRxCounter2 = 0;
-	for(i=0;i<MAXIRBUFLEN;i++)
-	{
-		IrBuf2[i] = 0x00;
-	}
-}
+//void Clear_IrRxBuffer2(void)
+//{
+//	u16 i;
+//	IrRxCounter2 = 0;
+//	for(i=0;i<MAXIRBUFLEN;i++)
+//	{
+//		IrBuf2[i] = 0x00;
+//	}
+//}
 
 void BL_Unpack(u8 *Buffer, u16 Length)//蓝牙数据解包
 {
