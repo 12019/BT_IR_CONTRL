@@ -1,4 +1,6 @@
 #include "myconfig.h"
+#include "string.h"
+#include <stdio.h>
 /*******************************************************************************
 * Function Name  : Quque_Configuration
 * Description    : Configures the Quque.
@@ -8,7 +10,7 @@
 *******************************************************************************/
 void InitQue(Quque *q)
 {
-	u16 i;
+//	u16 i;
 	q->head = 0;
 	q->tail = 0;
 
@@ -898,3 +900,19 @@ u8 Bcd2Hex(u8 b)
 	return hex ;
 }
 
+void GetBuildTime(unsigned char *date)
+{
+	char Date[] = __DATE__;
+	char Time[] = __TIME__;
+	char mon_s[20]={0};
+	char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
+	int mon=0, day=0, year=0;
+	int sec=0, min=0, hour=0;
+	sscanf(Date, "%s %d %d", mon_s, &day, &year);
+	sscanf(Time, "%d:%d:%d", &sec, &min, &hour);	
+	mon = (strstr(month_names, mon_s)-month_names)/3+1;
+	date[0] = Hex2Bcd((unsigned char)day);
+	date[1] = Hex2Bcd((unsigned char)mon);
+	date[2] = Hex2Bcd((unsigned char)(year%100));	
+	date[3] = (char)(sec+min+hour);
+}
