@@ -246,6 +246,7 @@ EXT_ u8 CountRX;
 EXT_ u8 Receive_bit;
 EXT_ u8 Rx_Start;
 EXT_ u8 Rx_Parity;
+EXT_ u8 Rx_Parity_tmp;
 
 EXT_ vu16 IrDARxCounter;
 EXT_ u8 IrDARxBuffer1[MAXBUFFER];

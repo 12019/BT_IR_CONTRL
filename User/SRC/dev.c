@@ -12,10 +12,10 @@ void InitQue(Quque *q)
 	q->head = 0;
 	q->tail = 0;
 
-	for(i=0;i<MAXOFRXQ;i++)
-	{
-		q->elem[i] = 0x00;
-	}
+//	for(i=0;i<MAXOFRXQ;i++)
+//	{
+//		q->elem[i] = 0x00;
+//	}
 }
 
 u8 IsFull(Quque *q)

@@ -131,8 +131,7 @@ if(0 == LoadFlash())//未设置BL
 			while(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
 			{
 				OutQueOneByte(&RxQUE3,&IrData);
-				IrRxCounter1 = 0;
-				IrRxCounter2 = 0;
+				InitQue(&IR_Buf1);
 				SendOneByte(IrData);
 			}
 		}
@@ -185,33 +184,12 @@ if(0 == LoadFlash())//未设置BL
 					IrTimeBegin = 0;
 					IR_Wtime = 0;
 					IrRxCounter1 = NumOfQue(&IR_Buf1);
-					AllOutQue(&IR_Buf1,IrBuf1);
-					USART3send(IrBuf1,IrRxCounter1);
-//					if((Buf_Flag == 1) && (IrRxCounter1!=0))
-//					{
-//						USART3send(IrBuf1,IrRxCounter1);
-//						IrRxCounter1 = 0;
-//					}
-//					else if((Buf_Flag == 2) && (IrRxCounter2!=0))
-//					{
-//						USART3send(IrBuf2,IrRxCounter2);
-//						IrRxCounter2 = 0;
-//					}
-				}
-				
-			
-//				if(Buf1_FULL)
-//				{
-//					USART3send(IrBuf1,MAXIRBUFLEN);
-//					Buf1_FULL = 0;
-//					IrRxCounter1 = 0;
-//				}
-//				else if(Buf2_FULL)
-//				{
-//					USART3send(IrBuf2,MAXIRBUFLEN);
-//					Buf2_FULL = 0;
-//					IrRxCounter2 = 0;
-//				}
+					if(IrRxCounter1 >0)
+					{
+						OutQue(&IR_Buf1,IrBuf1,IrRxCounter1);
+						USART3send(IrBuf1,IrRxCounter1);						
+					}
+				}			
 		}
 		
 		if(POW_TIME>=M_Time*1000)//关IR or 485

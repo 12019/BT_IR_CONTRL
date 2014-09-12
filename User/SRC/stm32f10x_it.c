@@ -143,8 +143,7 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
-  u8 i = 0,tmp;
-	u8 j = 0;
+//  u8 tmp;
 
 	if(TX_FLAG)
 	{
@@ -213,6 +212,7 @@ void SysTick_Handler(void)
 			{
 				CountRX = 0;
 				Receive_bit = 1;
+				Rx_Parity = 0;
 			}
 		}			
 		else if((CountRX == IR_BaudRate_Time)&&(Receive_bit > 0)&&(Receive_bit < 9))//8位数据
@@ -220,14 +220,15 @@ void SysTick_Handler(void)
 			tmp_data >>= 1;		
 			if(GPIOA->IDR&(1<<5)) 
 			{
-			tmp_data |=0x80;
+				tmp_data |=0x80;
+				Rx_Parity++;
 			}
 			CountRX = 0;
 			Receive_bit++;
 		}
 		else if((CountRX == IR_BaudRate_Time)&&(Receive_bit == 9))//效验位
 		{
-			Rx_Parity = GPIOA->IDR&(1<<5);
+			Rx_Parity_tmp = GPIOA->IDR&(1<<5);
 			CountRX = 0;
 			Receive_bit++;
 		}
@@ -235,14 +236,7 @@ void SysTick_Handler(void)
 		{
 			if(GPIOA->IDR&(1<<5)) 
 			{
-				for(j=0,i=0;i<8;i++)
-				{
-					if((tmp_data>>i&0x01) == 0x01)
-					{
-						j++;
-					}
-				}		
-				if(((j%2 == 0)&&(Rx_Parity == 0))||((j%2 != 0)&&(Rx_Parity != 0)))
+				if(((Rx_Parity%2 == 0)&&(Rx_Parity_tmp == 0))||((Rx_Parity%2 != 0)&&(Rx_Parity_tmp != 0)))
 				{
 					if(Ver_flag)
 					{
@@ -252,28 +246,6 @@ void SysTick_Handler(void)
 					{		
 						IR_to_BL = 1;		
 						InsertQue(&IR_Buf1,tmp_data);
-//						if((Buf_Flag == 1)&&(IrRxCounter1 < MAXIRBUFLEN))
-//						{
-//							IrBuf1[IrRxCounter1++] = tmp_data;
-//						}
-//						else if((Buf_Flag == 1)&&(IrRxCounter1 == MAXIRBUFLEN))
-//						{
-//							IrRxCounter2 = 0;
-//							IrBuf2[IrRxCounter2++] = tmp_data;
-//							Buf_Flag = 2;
-//							Buf1_FULL = 1;
-//						}
-//						else if((Buf_Flag == 2)&&(IrRxCounter2 < MAXIRBUFLEN))
-//						{
-//							IrBuf2[IrRxCounter2++] = tmp_data;
-//						}
-//						else if((Buf_Flag == 2)&&(IrRxCounter2 == MAXIRBUFLEN))
-//						{
-//							IrRxCounter1 = 0;
-//							IrBuf1[IrRxCounter1++] = tmp_data;
-//							Buf_Flag = 1;
-//							Buf2_FULL = 1;
-//						}	
 					}
 				}
 				RX_FLAG = 0;
