@@ -15,8 +15,8 @@
 #define TXD_high()		GPIO_SetBits(GPIOA, GPIO_Pin_6)
 #define TXD_low()		GPIO_ResetBits(GPIOA, GPIO_Pin_6)
 
-#define	VERL 0x02 		//版本号低位
-#define	VERH 0x00			//版本号高位
+#define	XVER 0x19 		//协议版本
+#define	SVER 0x10 		//版本号
 
 #define	IWDGSW			//看门狗开关
 
@@ -312,6 +312,7 @@ void Check_Rst(void);
 void SysTick_Configuration(void);
 u8 Bcd2Hex(u8 b);
 u8 Hex2Bcd(u8 b);
+void GetBuildTime(unsigned char *date);
 /*******UART功能函数区*************/
 void USART1send(u8 *buffer,u16 len);
 void USART2send(u8 *buffer,u16 len);

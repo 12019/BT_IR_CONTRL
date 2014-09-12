@@ -336,10 +336,10 @@ void Set_Sys(void)
 
 void Send_req(void)//读参数
 {
-	          /*起始  长度  模块发出  数据域:AFN   密钥剩余认证次数     剩余电量    CS      结束*/
-	u8 req[] = {0xA9, 0x0c, 0x80,            0x02, 0x00,0x00,0x00,0x00, 0x00,0x00,  0x00,   0x16};//读参数 数据域附带密钥剩余认证次数(4BYTE)和剩余电量信息(2BYTE)
+	          /*起始  长度  模块发出  数据域:AFN   密钥剩余认证次数     剩余电量  协议版本 软件版本                 CS      结束*/
+	u8 req[] = {0xA9, 0x12, 0x80,            0x02, 0x00,0x00,0x00,0x00, 0x00,0x00, 0x00,   0x00,0x00,0x00,0x00,0x00, 0x00,   0x16};//读参数 数据域附带密钥剩余认证次数(4BYTE)和剩余电量信息(2BYTE)
 	u8 i;
-	
+	u8 temp[5];
 	req[4] = (RZ_Counter&0xff000000)>>24;
 	req[5] = (RZ_Counter&0xff0000)>>16;
 	req[6] = (RZ_Counter&0xff00)>>8;
@@ -347,14 +347,23 @@ void Send_req(void)//读参数
 	
 	req[8] =  W_Bat&0xff;
 	req[9] = (W_Bat&0xff00)>>8;
-	
-		for(i=0;i<11;i++)
+		
+	req[10] = XVER;
+		
+	GetBuildTime(temp);
+	req[11] = SVER;
+	req[12] = 0x20;
+	req[13] = temp[2];
+	req[14] = temp[1];
+	req[15] = temp[0];
+		
+		for(i=0;i<16;i++)
 		{
-		if(i<10) {req[10] += req[i];}//CS
+		req[16] += req[i];//CS
 		}
 		
 		BL_REQ_FLAG = 1;//读参数应答数据帧标志
-		USART3send(req,0x0c);	
+		USART3send(req,0x12);	
 }
 
 void PowerDown(void)
