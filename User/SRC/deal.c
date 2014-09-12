@@ -172,10 +172,10 @@ void Set_Sys(void)
 			if(W_Mode == BLMODE)//BL设置：波特率 效验位 模块编码（4BYTE）
 			{		
 				/*模块编码（4BYTE）*/
-				W_Code[0] = RxTmp[9];
-				W_Code[1] = RxTmp[10];	
-				W_Code[2] = RxTmp[11];	
-				W_Code[3] = RxTmp[12];				
+				W_Code[0] = RxTmp[10];
+				W_Code[1] = RxTmp[11];	
+				W_Code[2] = RxTmp[12];	
+				W_Code[3] = RxTmp[13];				
 
 				sprintf(buf,"AT+NAME=BOOST%x%x%x%x%x%x%x%x\r\n",
 				(W_Code[0]&0xf0)>>4,W_Code[0]&0x0f,(W_Code[1]&0xf0)>>4,W_Code[1]&0x0f,
