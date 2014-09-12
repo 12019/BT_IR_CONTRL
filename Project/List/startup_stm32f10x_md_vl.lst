@@ -230,7 +230,7 @@ ARM Macro Assembler    Page 4
   145 00000000                 IMPORT           SystemInit
   146 00000000         ;                 LDR     R0, =SystemInit
   147 00000000         ;                 BLX     R0
-  148 00000000 4805            LDR              R0, =__main
+  148 00000000 4808            LDR              R0, =__main
   149 00000002 4700            BX               R0
   150 00000004                 ENDP
   151 00000004         
@@ -449,28 +449,40 @@ ARM Macro Assembler    Page 7
   289 00000018         ;*******************************************************
                        ************************
   290 00000018                 IF               :DEF:__MICROLIB
-  291 00000018         
-  292 00000018                 EXPORT           __initial_sp
-  293 00000018                 EXPORT           __heap_base
-  294 00000018                 EXPORT           __heap_limit
+  297 00000018         
+  298 00000018                 IMPORT           __use_two_region_memory
+  299 00000018                 EXPORT           __user_initial_stackheap
+  300 00000018         
 
 
 
 ARM Macro Assembler    Page 8 
 
 
-  295 00000018         
-  296 00000018                 ELSE
-  311                          ENDIF
-  312 00000018         
-  313 00000018                 END
+  301 00000018         __user_initial_stackheap
+  302 00000018         
+  303 00000018 4803            LDR              R0, =  Heap_Mem
+  304 0000001A 4904            LDR              R1, =(Stack_Mem + Stack_Size)
+  305 0000001C 4A04            LDR              R2, = (Heap_Mem +  Heap_Size)
+  306 0000001E 4B05            LDR              R3, = Stack_Mem
+  307 00000020 4770            BX               LR
+  308 00000022         
+  309 00000022 00 00           ALIGN
+  310 00000024         
+  311 00000024                 ENDIF
+  312 00000024         
+  313 00000024                 END
+              00000000 
+              00000000 
+              00000400 
+              00000200 
               00000000 
 Command Line: --debug --xref --cpu=Cortex-M3 --apcs=interwork --depend=..\obj\s
-tartup_stm32f10x_md_vl.d -o..\obj\startup_stm32f10x_md_vl.o -IC:\Keil_v5\ARM\RV
-31\INC -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\3.20.4\CMSIS\Include -IC:\Keil_v5\ARM\PA
-CK\Keil\STM32F1xx_DFP\1.0.4\Device\Include --predefine="__MICROLIB SETA 1" --li
-st=..\list\startup_stm32f10x_md_vl.lst ..\..\Libraries\CMSIS\CM3\DeviceSupport\
-ST\STM32F10x\startup\arm\startup_stm32f10x_md_vl.s
+tartup_stm32f10x_md_vl.d -o..\obj\startup_stm32f10x_md_vl.o -Id:\Keil\ARM\RV31\
+INC -Id:\Keil\ARM\PACK\ARM\CMSIS\4.1.1\CMSIS\Include -Id:\Keil\ARM\PACK\Keil\ST
+M32F1xx_DFP\1.0.5\Device\Include --list=..\list\startup_stm32f10x_md_vl.lst ..\
+..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\startup\arm\startup_stm32f10x
+_md_vl.s
 
 
 
@@ -493,8 +505,11 @@ Symbol: Stack_Mem
       At line 36 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\s
 tartup\arm\startup_stm32f10x_md_vl.s
    Uses
-      None
-Comment: Stack_Mem unused
+      At line 304 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
+startup\arm\startup_stm32f10x_md_vl.s
+      At line 306 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
+startup\arm\startup_stm32f10x_md_vl.s
+
 __initial_sp 00000400
 
 Symbol: __initial_sp
@@ -504,9 +519,7 @@ tartup\arm\startup_stm32f10x_md_vl.s
    Uses
       At line 61 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\s
 tartup\arm\startup_stm32f10x_md_vl.s
-      At line 292 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
-startup\arm\startup_stm32f10x_md_vl.s
-
+Comment: __initial_sp used once
 3 symbols
 
 
@@ -530,8 +543,11 @@ Symbol: Heap_Mem
       At line 48 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\s
 tartup\arm\startup_stm32f10x_md_vl.s
    Uses
-      None
-Comment: Heap_Mem unused
+      At line 303 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
+startup\arm\startup_stm32f10x_md_vl.s
+      At line 305 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
+startup\arm\startup_stm32f10x_md_vl.s
+
 __heap_base 00000000
 
 Symbol: __heap_base
@@ -539,9 +555,8 @@ Symbol: __heap_base
       At line 47 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\s
 tartup\arm\startup_stm32f10x_md_vl.s
    Uses
-      At line 293 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
-startup\arm\startup_stm32f10x_md_vl.s
-Comment: __heap_base used once
+      None
+Comment: __heap_base unused
 __heap_limit 00000200
 
 Symbol: __heap_limit
@@ -549,9 +564,8 @@ Symbol: __heap_limit
       At line 49 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\s
 tartup\arm\startup_stm32f10x_md_vl.s
    Uses
-      At line 294 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
-startup\arm\startup_stm32f10x_md_vl.s
-Comment: __heap_limit used once
+      None
+Comment: __heap_limit unused
 4 symbols
 
 
@@ -1289,7 +1303,17 @@ tartup\arm\startup_stm32f10x_md_vl.s
       At line 198 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
 startup\arm\startup_stm32f10x_md_vl.s
 
-53 symbols
+__user_initial_stackheap 00000018
+
+Symbol: __user_initial_stackheap
+   Definitions
+      At line 301 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
+startup\arm\startup_stm32f10x_md_vl.s
+   Uses
+      At line 299 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
+startup\arm\startup_stm32f10x_md_vl.s
+Comment: __user_initial_stackheap used once
+54 symbols
 
 
 
@@ -1305,7 +1329,9 @@ tartup\arm\startup_stm32f10x_md_vl.s
    Uses
       At line 48 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\s
 tartup\arm\startup_stm32f10x_md_vl.s
-Comment: Heap_Size used once
+      At line 305 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
+startup\arm\startup_stm32f10x_md_vl.s
+
 Stack_Size 00000400
 
 Symbol: Stack_Size
@@ -1315,7 +1341,9 @@ tartup\arm\startup_stm32f10x_md_vl.s
    Uses
       At line 36 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\s
 tartup\arm\startup_stm32f10x_md_vl.s
-Comment: Stack_Size used once
+      At line 304 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
+startup\arm\startup_stm32f10x_md_vl.s
+
 __Vectors_Size 00000120
 
 Symbol: __Vectors_Size
@@ -1352,5 +1380,14 @@ startup\arm\startup_stm32f10x_md_vl.s
       At line 148 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
 startup\arm\startup_stm32f10x_md_vl.s
 Comment: __main used once
-2 symbols
-401 symbols in table
+__use_two_region_memory 00000000
+
+Symbol: __use_two_region_memory
+   Definitions
+      At line 298 in file ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\
+startup\arm\startup_stm32f10x_md_vl.s
+   Uses
+      None
+Comment: __use_two_region_memory unused
+3 symbols
+404 symbols in table

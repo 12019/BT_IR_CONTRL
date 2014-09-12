@@ -760,7 +760,7 @@ void Get_ESAM_Data(void)
 	u8 Dbad[6] = {0};
 		         /* S    L   蓝牙模块发出  AFN  认证失败  CS    P */
 	u8 RZSB[] = {0xA9,0x07,0x80,         0x04,0xff,    0x00,0x16};
-	u8 DBADD[6];
+//	u8 DBADD[6];
 	u8 ESAM_Data_Send_Back[23] = {0xa9,0x17,0x84,0x04,0x11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x00,0x16};
 	
 	PWR_ESAM_ON();

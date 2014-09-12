@@ -71,7 +71,7 @@
 #define	IRREQ_TIMES	0x10
 
 #define Byte_Time		50
-#define Byte_Time_BL 200
+#define Byte_Time_BL 100
  
 #define COM0	0				//ºìÍâ
 #define COM1	1				//´®¿Ú
