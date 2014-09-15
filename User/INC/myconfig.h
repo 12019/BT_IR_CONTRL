@@ -166,7 +166,7 @@
 typedef struct	
 	{   
 	u8 elem[MAXOFRXQ];   
-	u8 head,tail;   
+	u16 head,tail;   
 	}Quque;
 	
 #ifdef  root

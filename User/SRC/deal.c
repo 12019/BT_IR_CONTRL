@@ -464,9 +464,9 @@ void SendOneByte(u8 Byte)
 	{
 		PWM_Enable();
 		PWR_IR_ON();
-		POW_IR = 0;
 	}
-	EXTI9_5_DISABLE();	
+	POW_IR = 0;
+//	EXTI9_5_DISABLE();	
 	RX_FLAG = 0;
 	CountRX = 0;
 	Receive_bit = 0;
@@ -476,7 +476,7 @@ void SendOneByte(u8 Byte)
 	BYTE = Byte;
 	while(TX_FLAG == 1);
 	delay_nms(1);
-	EXTI9_5_ENABLE();	
+//	EXTI9_5_ENABLE();	
 }
 
 void SendBytes(u8 *str,u8 len)

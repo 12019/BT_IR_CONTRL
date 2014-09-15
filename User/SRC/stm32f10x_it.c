@@ -448,8 +448,8 @@ void EXTI9_5_IRQHandler(void)//PA5
 		if(TX_FLAG == 0)
 		{
 			RX_FLAG = 1;
-			CountRX = 0;
-			Receive_bit = 0;
+//			CountRX = 0;
+//			Receive_bit = 0;
 			EXTI9_5_DISABLE();
 		}
 	}
