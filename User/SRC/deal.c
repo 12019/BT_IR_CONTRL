@@ -4,369 +4,427 @@
 #include    <stdio.h>
 #include    <string.h>
 
+#define FRMAEMINLEN 0x05
+#define FRMAEHEAD		0xA9
+#define FRMAEEND		0x16
+
+#define MAXREPALY 	240
+
+#define AFN0	0x00
+#define AFN1	0x01
+#define AFN2	0x02
+#define AFN3	0x03
+
+#define	BTPORT 			0x00
+#define	IRDAPORT 		0x01
+#define	RS485PORT 	0x02
+#define	ESAMPORT 		0x03
+#define	IRDAREPORT 	0x04
+#define	LEFTPOWER 	0x05
+#define	WAERVER		 	0x06
+#define	RZCONTER	 	0x07
+
 volatile FLASH_Status FLASHStatus;
 
+void do_contrl_pro(void)
+{
+	if((Dat_dbuf.Contrl&0x01) == 0x01)
+	{
+		PowerDown();
+	}
+//	if((Dat_dbuf.Contrl&0x80) == 0x80)
+//	{
+//		
+//	}
+}
 /*************数据头尾及校验*****************/
 u8 CheckHE(void)
 {
-	u8 tmp,t = 0,Re = 0;
-	
-	while((NumOfQue(&RxQUE3) != 16))
+	u8 Re = 0;
+	u16 i = 0;
+	u16 j = 0;
+	u8 tempsum = 0;
+	u8 templen;
+	if(RxCounter3<FRMAEMINLEN)			//数据未达到最小长度
+		return 0;
+	while(RxBuffer3[i] != FRMAEHEAD)
 	{
-		IWDG_ReloadCounter();
-		delay_nms(100);
-		t++;
-		if(t>=100)//超过10s超时退出
+		i++;
+	}
+	templen = RxBuffer3[i+1];
+	if(templen+i > RxCounter3)		//数据未接收完全
+		return 0;
+	if(RxBuffer3[i+templen-1] == FRMAEEND)
+	{
+		tempsum = RxBuffer3[i+templen-2];
+		if(tempsum == CheckSum((RxBuffer3+i),(templen-2)))
 		{
-		W_Bat = ADC_filter();
-		break;
+			Sys_run.Sleep_run_Time = 0;
+			Dat_dbuf.Contrl = RxBuffer3[i+2];
+			do_contrl_pro();
+			Dat_dbuf.AFN = RxBuffer3[i+3];
+			switch(Dat_dbuf.AFN)
+			{
+				case AFN0:
+					Dat_dbuf.AFN0dbuf.Port = RxBuffer3[i+4];
+					Dat_dbuf.AFN0dbuf.BaudRate = RxBuffer3[i+5];
+					Dat_dbuf.AFN0dbuf.Parity = RxBuffer3[i+6];
+					Dat_dbuf.AFN0dbuf.SleepTime = RxBuffer3[i+7];
+					break;
+				case AFN1:
+					Dat_dbuf.AFN1dbuf.Port = RxBuffer3[i+4];
+					Dat_dbuf.AFN1dbuf.OutTime_Thisport = RxBuffer3[i+5];
+					Dat_dbuf.AFN1dbuf.TranLen= RxBuffer3[i+6];
+					for(j=i+7;j<templen-2;j++)
+					{
+						Dat_dbuf.AFN1dbuf.TranDate[j-i-7] = RxBuffer3[j];				
+					}
+					break;
+				case AFN2:
+					Dat_dbuf.AFN2dbuf.Port = RxBuffer3[i+4];
+					Dat_dbuf.AFN2dbuf.ReqLen = RxBuffer3[i+5];
+					if(Dat_dbuf.AFN2dbuf.ReqLen > MAXREPALY)
+					{
+						Dat_dbuf.AFN2dbuf.ReqLen = MAXREPALY;
+					}
+					break;
+				case AFN3:
+					Dat_dbuf.AFN3dbuf.Port = RxBuffer3[i+4];
+					for(j=0;j<6;j++)
+					{
+						Dat_dbuf.AFN3dbuf.DBAddr[j] = RxBuffer3[i+5+j];
+					}
+					Dat_dbuf.AFN3dbuf.TransLen = RxBuffer3[i+11];
+					for(j=0;j<Dat_dbuf.AFN3dbuf.TransLen;j++)
+					{
+						Dat_dbuf.AFN3dbuf.TransData[j] = RxBuffer3[i+12+j];
+					}
+					break;
+				default:
+					break;
+			}
+			Dat_dbuf.Dataisready = 1;
+			Re = 1;
 		}
+		else
+		{
+			return 0;
+		}		
+		Clear_RxBuffer3();
 	}
-	AllOutQue(&RxQUE3,RxTmp);//配置数据
-	
-	if(RxTmp[0] == 0xA9)
-	{
-		tmp = RxTmp[1];
-	}
-	if(RxTmp[tmp-1] == 0x16)
-	{
-InitQue(&RxQUE3);
-		return 1;
-	}
-	else
-	{
-		InitQue(&RxQUE3);
-		return Re;		
-	}
+	return Re;
 }
 
 /*************数据求和校验*****************/
-u8 CheckSum(void)
+u8 CheckSum(u8 *buffer, u8 len)
 {
-	u8 i,sum = 0;
-	
-	if(1 == CheckHE())
+	u8 i;
+	u8 Re = 0;
+	for(i=0;i<len;i++)
 	{
-		for(i=0;i<(RxTmp[1]-2);i++)
-		{
-			sum += RxTmp[i];
-		}
+		Re +=buffer[i];
 	}
-	if(sum == RxTmp[RxTmp[1]-2])
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}	
+	return Re;
 }
 
-u8 CheckDB(void)
+
+void Return_BT(void)
 {
-	u8 Ln,L,i = 0,sum = 0;
-	
-	if(RxBuffer3[0] == 0xA9)
-	{
-		L = RxBuffer3[1];//帧数据总长度
-	}
-	else return 0;
-	
-	if(RxBuffer3[L-1] == 0x16)
-	{
-		Ln = RxBuffer3[10];//转发数据长度
-		
-			if((Ln == L-13)&&(RxBuffer3[3]==0x03||RxBuffer3[3]==0x04))
+	u8 tempdata[0xff];
+	u8 i;
+	switch(ReturnFeame.Data_uBuf.AFN)
+	{		
+		case AFN0:			
+			tempdata[0] = FRMAEHEAD;
+			tempdata[1] = ReturnFeame.len+5;
+			tempdata[2] = ReturnFeame.contrl;
+			tempdata[3] = ReturnFeame.Data_uBuf.AFN;
+			tempdata[4] = ReturnFeame.Data_uBuf.AFN0ubuf.Port;
+			tempdata[5] = ReturnFeame.Data_uBuf.AFN0ubuf.End_rep;
+			tempdata[6] = 0;
+			for(i=0;i<6;i++)
 			{
-				for(i=0;i<(RxBuffer3[1]-2);i++)//求和效验
-				{
-				sum += RxBuffer3[i];
-				}
-				if(sum == RxBuffer3[L-2])
-				{
-					if(RxBuffer3[2]&0x04)//需要认证
-					{
-						if(RxBuffer3[3] == 0x04)//ESAM  (RAND1 && ENCDATA1)
-						{
-							GET_ESAM = 1;
-						}		
-						if(Ln == 0)
-						{
-							ZF_LEN = 0;
-							IR_DB_RZ = 1; 
-						}
-						else 
-						{
-							ZF_LEN = 1; 
-							IR_DB_RZ = 1; 
-						}	
-					}
-					else//不需要认证
-					{
-						if(Ln == 0)
-						{
-							ZF_LEN = 0;
-							IR_DB_RZ = 0;	
-						}
-						else 
-						{
-							ZF_LEN = 1; 
-							IR_DB_RZ = 0;
-						}
-					}
-				return 1;
-				}
-				else return 0;
+				tempdata[6] += tempdata[i];
 			}
-			else return 0;	
+			tempdata[7] = FRMAEEND;
+			USART3send(tempdata,8);
+			break;
+		case AFN1:
+			tempdata[0] = FRMAEHEAD;
+			tempdata[1] = ReturnFeame.len+5;
+			tempdata[2] = ReturnFeame.contrl;
+			tempdata[3] = ReturnFeame.Data_uBuf.AFN;
+			tempdata[4] = ReturnFeame.Data_uBuf.AFN1ubuf.Port;
+			tempdata[5] = ReturnFeame.Data_uBuf.AFN1ubuf.TranRep;
+			tempdata[6] = 0;
+			for(i=0;i<6;i++)
+			{
+				tempdata[6] += tempdata[i];
+			}
+			tempdata[7] = FRMAEEND;
+			USART3send(tempdata,8);
+			break;
+		case AFN2:
+			tempdata[0] = FRMAEHEAD;
+			tempdata[1] = ReturnFeame.len+5;
+			tempdata[2] = ReturnFeame.contrl;
+			tempdata[3] = ReturnFeame.Data_uBuf.AFN;
+			tempdata[4] = ReturnFeame.Data_uBuf.AFN2ubuf.Port;
+			tempdata[5] = ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen;
+			for(i=0;i<ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen;i++)
+			{
+				tempdata[6+i] = ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[i];
+			}
+			tempdata[6+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen] = 0;
+			for(i=0;i<6+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen;i++)
+			{
+				tempdata[6+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen] += tempdata[i];
+			}
+			tempdata[7+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen] = FRMAEEND;
+			USART3send(tempdata,8+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);
+			break;
+		case AFN3:
+			break;		
+		default:
+			break;
 	}
-	else return 0;
+	ReturnFeame.Data_uBuf.AFN = 0xFF;
 }
-	
-void Set_Sys(void)
+void AF0_Lib_Proc(void)
 {
-	char buf[50];
-//	u8 command5[] = {"AT+NAME?\r\n"};
-	u8 i = 0;
 	u32 BaudRate;
 	u16 Parity;
-	
-	/*0xA9 L    C    AFN         通道号 波特率  效验位 等待休眠时间 协议解析状态 模块超时时间 模块编码             CS   0x16*/
-	/*               03红外抄表  00 红  00 1200 00 偶  分钟         00 透传       秒          4BYTE                         */
-	/*               04ESAM      01 485 01 2400 01 奇               01 协议支持                                             */
-	/*                           02 蓝  03 9600 02 无                                                                       */
-	/*               02读参数           06 38400                                                                            */
-	/*0xA9 0x0F 0x00 0x02        0x00   0x00    0x00   0x05         0x01          0x05        0x00 0x00 0x00 0x00  0xC0 0x16*/
-	
-	if(1 == CheckSum())
-	{
-		if(RxTmp[1] != 0x10)//配置长度固定应该为16
-		{
-     sysread = 0xff;
-		}	
-	  else
-		{
-		sysread = 1;
-		
-//AFN = RxTmp[3];
-		
-		W_Mode = RxTmp[4];//通道号
-		W_BaudRate = RxTmp[5];//波特率	
-		W_Parity = RxTmp[6];//效验位
-		W_Time = RxTmp[7];//等待休眠时间	
-		M_Time = RxTmp[9];//模块超时时间
-
-		if(W_Time == 0)//立即进入低功耗
-		{
-			PowerDown();//复位按键唤醒
-		}
-		
-		/*      控制码C解析      */
-		if((RxTmp[2]&0x01))//立即进入低功耗
-		{
-			PowerDown();//复位按键唤醒
-		}
-		
-		if((RxTmp[2]&0x02))
-		{
-			if(W_Mode == BLMODE)//BL设置：波特率 效验位 模块编码（4BYTE）
-			{		
-				/*模块编码（4BYTE）*/
-				W_Code[0] = RxTmp[10];
-				W_Code[1] = RxTmp[11];	
-				W_Code[2] = RxTmp[12];	
-				W_Code[3] = RxTmp[13];				
-
-				sprintf(buf,"AT+NAME=BOOST%x%x%x%x%x%x%x%x\r\n",
-				(W_Code[0]&0xf0)>>4,W_Code[0]&0x0f,(W_Code[1]&0xf0)>>4,W_Code[1]&0x0f,
-				(W_Code[2]&0xf0)>>4,W_Code[2]&0x0f,(W_Code[3]&0xf0)>>4,W_Code[3]&0x0f);	
-				
-				IWDG_ReloadCounter();
-				Clear_RxBuffer3();
-				SetUartState(COM3,CBR_38400,USART_Parity_No);//BL 38400 1停 无
-				Set_BL_Enter();//进入AT模式
-				delay_nms(1000);//等待复位
-		
-				while((buf[i-1]!=0x0D)||(buf[i]!=0x0A))//设置名称	
-				{
-				USART_SendData(USART3, buf[i++]);
-				delay_nms(10);
-				}
-				i = 0;
-				while(!OK)//while((RxBuffer3[1]!=0x4f)||(RxBuffer3[2]!=0x4b))//'OK' 
-				{
-					IWDG_ReloadCounter();
-					delay_nms(100);
-					i++;
-					if(i>=30)//BL设置失败 超过3s再次尝试设置
-					{	
-							Clear_RxBuffer3();
-							while((buf[i-1]!=0x0D)||(buf[i]!=0x0A))//设置名称 
-							{
-							USART_SendData(USART3, buf[i++]);
-							delay_nms(10);
-							}
-							i = 0;
-							while(!OK)
-							{
-								delay_nms(100);
-								i++;
-								if(i>=30)//BL再次设置失败 重启系统
-								{	
-								NVIC_SystemReset();	
-								}
-							}
-					}
-				}
-				NVIC_SystemReset();//设置完成后重启系统
-			}
-		}	
-		
-		switch(W_BaudRate)
+	switch(Dat_dbuf.AFN0dbuf.BaudRate)
 		{
 			case(0):
-			{
 			BaudRate = CBR_1200;
 			break;
-			}				
 			case(1):
-			{
 			BaudRate = CBR_2400;
 			break;
-			}
 			case(3):
-			{
 			BaudRate = CBR_9600;
 			break;
-			}
 			case(6):
-			{
 			BaudRate = CBR_38400;
 			break;
-			}			
 			default:
 			break;		
 		}
-
-		switch(W_Parity)
-		{
-			case(0):
-			{
-			Parity = EVENPARITY;
-			break;
-			}				
-			case(1):
-			{
-			Parity = ODDPARITY;
-			break;
-			}
-			case(2):
-			{
-			Parity = NOPARITY;
-			break;
-			}			
-			default:
-			break;		
-		}	
-	
-			if(W_Mode == UARTMODE)//通道号为485
-			{
-			SetUartState(COM1, BaudRate,Parity);
-			}
-			else if(W_Mode == IRDAMODE)//通道号为红外
-			{
+	switch(Dat_dbuf.AFN0dbuf.Parity)
+	{
+		case(0):
+		Parity = EVENPARITY;
+		break;
+		case(1):
+		Parity = ODDPARITY;
+		break;
+		case(2):
+		Parity = NOPARITY;
+		break;
+		default:
+		break;		
+	}	
+	switch(Dat_dbuf.AFN0dbuf.Port)
+	{
+		case IRDAPORT:
 				switch(BaudRate)
 				{
-					case(1200):
-					{
-					IR_BaudRate_Time = 83;
-					break;
-					}				
-					case(2400):
-					{
-					IR_BaudRate_Time = 42;
-					break;
-					}
+					case(CBR_1200):
+						IR_BaudRate_Time = 83;
+						break;
+					case(CBR_2400):
+						IR_BaudRate_Time = 42;
+						break;
 					default:
-					IR_BaudRate_Time = 83;
-					break;	
+						IR_BaudRate_Time = 83;
+						break;	
 				}
-			}	
-		
-				/*       协议解析状态      */
-				if(RxTmp[8]==0)//数据透传:IR 485 ESAM   RxTmp[4] == 0 1 3
-				{
-					TrasferMode = 0;//根据通道号透传 直接转发
-				}
-				else//协议支持:红外抄表 ESAM 功能切换
-				{	
-					if(W_Mode==0)//红外抄表
-					{	
-						TrasferMode = 3;
-					}							
-				}
-					
-			if(W_Mode == 0)//IR
-			{			
-				IR_GPIO_Init();/*模拟串口中断配置*/
-				if(!TrasferMode)
-				{
-					IR_TC = 1;
-				}
-			}
-			else if(W_Mode == 1)//485
-			{
-				Rs485_TC = 1;
-				PWR_485_ON();
-			}
-//			else if(W_Mode == 3)//ESAM
-//			{
-//			IR_GPIO_Init();/*模拟串口中断配置*/			
-//			PWR_ESAM_ON();
-//			delay_nms(100);
-//			ESAM_Reset();
-//			}
-			
-			BL_REQ_FLAG = 2;//非第一帧应答数据标志
-			
-			BL_STA = 2;//BL已连接 LED 1HZ
+				Sys_config.IrDAisconfed = 1;
+			break;
+		case RS485PORT:
+			SetUartState(RS485, BaudRate, Parity);
+			Sys_config.RS485isconfed = 1;
+			break;
+		default:
+			break;
 	}
- }
+	ReturnFeame.head = FRMAEHEAD;
+	ReturnFeame.len = 0x03;
+	ReturnFeame.contrl = 0x80;
+	ReturnFeame.End = FRMAEEND;
+	ReturnFeame.Data_uBuf.AFN = Dat_dbuf.AFN;
+	ReturnFeame.Data_uBuf.AFN0ubuf.End_rep = 1;
+	ReturnFeame.Data_uBuf.AFN0ubuf.Port = Dat_dbuf.AFN0dbuf.Port;
+	
+	Return_BT();
+}
+void AF1_Lib_Proc(void)
+{
+	ReturnFeame.head = FRMAEHEAD;
+	ReturnFeame.len = 0x03;
+	ReturnFeame.contrl = 0x80;
+	ReturnFeame.End = FRMAEEND;
+	ReturnFeame.Data_uBuf.AFN = Dat_dbuf.AFN;
+	ReturnFeame.Data_uBuf.AFN1ubuf.Port = Dat_dbuf.AFN1dbuf.Port;
+	switch(Dat_dbuf.AFN1dbuf.Port)
+	{
+		case BTPORT:
+			//配置蓝牙模块，暂时未实现
+			break;
+		case IRDAPORT: 
+			if(Sys_config.IrDAisconfed)
+			{
+				ReturnFeame.Data_uBuf.AFN1ubuf.TranRep = 1;
+				Return_BT();
+				Sys_config.OutTime_IRDA = Dat_dbuf.AFN1dbuf.OutTime_Thisport;
+				SendBytes(Dat_dbuf.AFN1dbuf.TranDate, Dat_dbuf.AFN1dbuf.TranLen);
+				Sys_run.Out_run_Time_IRDA = 0;
+			}
+			else
+			{
+				ReturnFeame.Data_uBuf.AFN1ubuf.TranRep = 0;
+				Return_BT();
+			}
+			break;
+		case RS485PORT:
+			if(Sys_config.RS485isconfed)
+			{
+				ReturnFeame.Data_uBuf.AFN1ubuf.TranRep = 1;
+				Return_BT();
+				Sys_config.OutTime_RS485 = Dat_dbuf.AFN1dbuf.OutTime_Thisport;
+				USART1send(Dat_dbuf.AFN1dbuf.TranDate, Dat_dbuf.AFN1dbuf.TranLen);
+				Sys_run.Out_run_Time_RS485 = 0;
+			}
+			else
+			{
+				ReturnFeame.Data_uBuf.AFN1ubuf.TranRep = 0;
+				Return_BT();
+			}
+			break;
+		case ESAMPORT:
+			break;
+		default:
+			break;
+	}
+}
+void AF2_Lib_Proc(void)
+{
+	u32 temp;
+	switch(Dat_dbuf.AFN2dbuf.Port)
+	{
+		case IRDAPORT: 
+			if(Dat_dbuf.AFN2dbuf.ReqLen < NumOfQue(&IrDARxQUE))
+			{
+				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = Dat_dbuf.AFN2dbuf.ReqLen;
+				OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);
+			}
+			else if(Dat_dbuf.AFN2dbuf.ReqLen >= NumOfQue(&IrDARxQUE))
+			{
+				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = NumOfQue(&IrDARxQUE);
+				OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);				
+			}
+			break;
+		case RS485PORT:
+			if(Dat_dbuf.AFN2dbuf.ReqLen < NumOfQue(&RS485RxQUE))
+			{
+				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = Dat_dbuf.AFN2dbuf.ReqLen;
+				OutQue(&RS485RxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);
+			}
+			else if(Dat_dbuf.AFN2dbuf.ReqLen >= NumOfQue(&RS485RxQUE))
+			{
+				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = NumOfQue(&RS485RxQUE);
+				OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);				
+			}			
+			break;
+		case ESAMPORT:
+			break;
+		case IRDAREPORT:
+			break;
+		case LEFTPOWER:
+			temp = ADC_filter();
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = 0x02;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[0] = (u8)(temp&0xff);
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[1] = (u8)((temp&0xff00)>>8);		
+			break;
+		case WAERVER:
+			GetBuildTime();
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = 0x09;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[0] = XVER;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[1] = SVER;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[2] = BuildTime.yearh;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[3] = BuildTime.yearl;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[4] = BuildTime.mon;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[5] = BuildTime.date;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[6] = BuildTime.hour;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[7] = BuildTime.min;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[8] = BuildTime.sec;
+			break;
+		case RZCONTER:
+			ESAM_Info();
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = 0x04;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[0] = (RZ_Counter&0xff000000)>>24;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[1] = (RZ_Counter&0xff0000)>>16;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[2] = (RZ_Counter&0xff00)>>8;
+			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealData[3] = RZ_Counter&0xff;
+			break;		
+		default:
+			break;
+	}		
+	ReturnFeame.head = FRMAEHEAD;
+	ReturnFeame.len = ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen+3;
+	ReturnFeame.contrl = 0x80;
+	ReturnFeame.End = FRMAEEND;
+	ReturnFeame.Data_uBuf.AFN = Dat_dbuf.AFN;
+	ReturnFeame.Data_uBuf.AFN2ubuf.Port = Dat_dbuf.AFN2dbuf.Port;
+	
+	Return_BT();
+}
+void AF3_Lib_Proc(void)
+{
+	
+}
+void BT_Analysis(void)
+{
+	if(1 == CheckHE())
+	{
+		switch(Dat_dbuf.AFN)
+		{
+			case AFN0:
+				AF0_Lib_Proc();
+				break;
+			case AFN1:
+				AF1_Lib_Proc();
+				break;
+			case AFN2:
+				AF2_Lib_Proc();
+				break;
+			case AFN3:
+				AF3_Lib_Proc();
+				break;
+			default:
+				break;
+		}
+	}
 }
 
-void Send_req(void)//读参数
+void Time_Comp(void)
 {
-	          /*起始  长度  模块发出  数据域:AFN   密钥剩余认证次数     剩余电量  协议版本 软件版本                 CS      结束*/
-	u8 req[] = {0xA9, 0x12, 0x80,            0x02, 0x00,0x00,0x00,0x00, 0x00,0x00, 0x00,   0x00,0x00,0x00,0x00,0x00, 0x00,   0x16};//读参数 数据域附带密钥剩余认证次数(4BYTE)和剩余电量信息(2BYTE)
-	u8 i;
-	u8 temp[5];
-		
-	req[4] = (RZ_Counter&0xff000000)>>24;
-	req[5] = (RZ_Counter&0xff0000)>>16;
-	req[6] = (RZ_Counter&0xff00)>>8;
-	req[7] = RZ_Counter&0xff;
+	if(Sys_run.Sleep_run_Time > (Sys_config.SleepTime*60*1000))
+	{
+		PowerDown();
+	}
+	if(Sys_run.Out_run_Time_IRDA >(Sys_config.OutTime_IRDA*1000))
+	{
+		Set_IRDA_power_OFF();
+	}
+	if(Sys_run.Out_run_Time_RS485 >(Sys_config.OutTime_RS485*1000))
+	{
+		Set_RS485_power_OFF();
+	}
 	
-	req[8] =  W_Bat&0xff;
-	req[9] = (W_Bat&0xff00)>>8;
-		
-	req[10] = XVER;
-		
-	GetBuildTime(temp);
-	
-	req[11] = SVER;
-	req[12] = 0x20;
-	req[13] = temp[2];
-	req[14] = temp[1];
-	req[15] = temp[0];
-		
-		for(i=0;i<16;i++)
-		{
-		req[16] += req[i];//CS
-		}
-		
-		BL_REQ_FLAG = 1;//读参数应答数据帧标志
-		USART3send(req,0x12);	
 }
+
 
 void PowerDown(void)
 {
@@ -387,20 +445,18 @@ void PowerUp(void)
 	GPIO_BLRST_OFF();//复位模块
 	GPIO_BLSET_OFF();//KEY置低 配对
 	PWR_BL_ON();
-	BL_STA = 1;//未连接
 }
 
 void PowerOff(void)
 {
-	PWR_IR_OFF();
 	PWR_BL_OFF();
-	PWR_485_OFF();
-	PWR_ESAM_OFF();
+	Set_IRDA_power_OFF();
+	Set_RS485_power_OFF();
+	Set_ESAM_power_OFF();
 }
 
 void Set_BL_Enter(void)
 {
-	AT_FLAG = 1;
 	PWR_BL_OFF();
 	GPIO_BLSET_ON();
 	delay_nms(50);
@@ -408,65 +464,18 @@ void Set_BL_Enter(void)
 }
 void Set_BL_Exit(void)
 {
-	AT_FLAG = 0;
 	GPIO_BLSET_OFF();
 	PWR_BL_OFF();
-//	delay_nms(50);
-//	PWR_BL_ON();	
 }
 
-void Req_BL(void)
-{
-	u16 timeout = 0;
-	u16 timeout1 =0;
-	
-	while((LED2_0)&&(timeout1++ < 6000))//等待配对时间 约10min
-	{
-		IWDG_ReloadCounter();
-		delay_nms(100);
-	}
-	
-	if(timeout1 >= 6000)
-	{
-		timeout1 = 0;
-		PowerDown();
-	}
-	
-	if(LED2_1)
-	{
-		do
-		{
-			IWDG_ReloadCounter();
-			
-			if(timeout>29)
-			{
-				timeout = 0;
-				PowerDown();
-			}	
-			timeout++;
-			
-			Send_req();//BL请求应答 读参数
-			
-			Set_Sys();//应答参数处理	
-			
-		}while((LED2_1)&&(sysread == 0));//发送数据 接收应答
-	}
-	
-	if(sysread != 1)//Set_Sys效验后sysread == 1
-	{
-		NVIC_SystemReset();
-	}
-}
 
 void SendOneByte(u8 Byte)
 {
-	if(POW_IR)
+	if(POW_IR == 0)
 	{
-		PWM_Enable();
-		PWR_IR_ON();
+		Set_IRDA_power_ON();
 	}
-	POW_IR = 0;
-//	EXTI9_5_DISABLE();	
+
 	RX_FLAG = 0;
 	CountRX = 0;
 	Receive_bit = 0;
@@ -476,7 +485,6 @@ void SendOneByte(u8 Byte)
 	BYTE = Byte;
 	while(TX_FLAG == 1);
 	delay_nms(1);
-//	EXTI9_5_ENABLE();	
 }
 
 void SendBytes(u8 *str,u8 len)
@@ -494,15 +502,7 @@ void SendBytes(u8 *str,u8 len)
 // SendOneByte(*str++);
 //}
 
-void Clear_RxBuffer1(void)
-{
-	u16 i;
-	RxCounter1 = 0;
-	for(i=0;i<MAXBUFFER;i++)
-	{
-		RxBuffer1[i] = 0x00;
-	}
-}
+
 void Clear_RxBuffer2(void)
 {
 	u16 i;
@@ -512,6 +512,7 @@ void Clear_RxBuffer2(void)
 		RxBuffer2[i] = 0x00;
 	}
 }
+
 void Clear_RxBuffer3(void)
 {
 	u16 i;
@@ -522,124 +523,6 @@ void Clear_RxBuffer3(void)
 	}
 }
 
-//void Clear_IrRxBuffer1(void)
-//{
-//	u16 i;
-//	IrRxCounter1 = 0;
-//	for(i=0;i<MAXIRBUFLEN;i++)
-//	{
-//		IrBuf1[i] = 0x00;
-//	}
-//}
-
-//void Clear_IrRxBuffer2(void)
-//{
-//	u16 i;
-//	IrRxCounter2 = 0;
-//	for(i=0;i<MAXIRBUFLEN;i++)
-//	{
-//		IrBuf2[i] = 0x00;
-//	}
-//}
-
-void BL_Unpack(u8 *Buffer, u16 Length)//蓝牙数据解包
-{
-	/*0xA9 L     C        AFN         DBBH          Ln         CS   0x16*/
-	/*                    03红外抄表  6BYTE                             */
-	/*                    04ESAM                                        */
-	/*                                                                  */
-	/*           需要认证                                               */
-	/*0xA9 Ln+13 0x04     0x03        0 0 0 0 0 0   n BYTE     0x00 0x16*/	
-	
-	
-	         /* S    L   蓝牙模块发出  AFN  认证失败  CS    P */
-u8 RZSB[] = {0xA9,0x07,0x80,         0x03,0xff,    0x00,0x16};
-u8 DB[6] = {0};
-u8 i = 0;
-u8 Ve;
-	
-	if(1 == CheckDB())
-	{
-		for(i=0;i<6;i++)
-		{
-		DB[i] = Buffer[4+i];//6BYTE电表表号
-		}
-		
-		if(IR_DB_RZ)//认证
-		{
-			PWR_ESAM_ON();
-			PWM_Enable();
-			PWR_IR_ON();
-			
-				if(GET_ESAM)
-				{
-					GET_ESAM = 0;
-					Get_ESAM_Data();	
-				}
-				else
-				{	
-					Ver_flag = 1;
-					Ve = DoVerifica(DB);
-					Ver_flag = 0;
-					
-					PWR_ESAM_OFF();
-							
-						if((Ve == PRIVATESUC)||(Ve == PUBLICSUC))//与ESAM交互成功  
-						{
-							if(ZF_LEN == 0)
-							{
-								RZSB[4] = Ve;
-								for(i=0;i<5;i++)
-								{
-									RZSB[5] += RZSB[i];//CS
-								}
-								USART3send(RZSB,7);
-							}
-							else
-							{
-								for(i=11;i<(Length-2);i++)//剩余字节转发红外 
-								{
-									SendOneByte(Buffer[i]);
-								}
-							}
-						}
-						else//认证失败 2:VERIFICAFAIL	3:NORETURN			
-						{
-							RZSB[4] = Ve;
-							for(i=0;i<5;i++)
-							{
-								RZSB[5] += RZSB[i];//CS
-							}
-							USART3send(RZSB,7);
-						}
-					}
-			}
-		
-		else//不认证
-		{
-			PWM_Enable();
-			PWR_IR_ON();
-			
-			if(ZF_LEN == 0)
-			{
-				RZSB[4] = NORETURN;//无数据响应
-				for(i=0;i<5;i++)
-				{
-					RZSB[5] += RZSB[i];//CS
-				}
-				USART3send(RZSB,7);
-			}
-			else
-			{
-				for(i=11;i<(Length-2);i++)//剩余字节转发红外 
-				{
-					SendOneByte(Buffer[i]);
-				} 
-			}
-		}
-	}
-	Clear_RxBuffer3();
-}
 
 void ESAM_Info(void)
 {
@@ -647,7 +530,7 @@ void ESAM_Info(void)
 	
 	RZ_Counter = ReadCounter();
 	
-	PWR_ESAM_OFF();
+	Set_ESAM_power_OFF();
 }
 
 u8 FlashWrite(u32 Data)
@@ -667,6 +550,57 @@ u8 FlashWrite(u32 Data)
 		}
 }
 
+
+void Wait_BTlink(void)
+{
+	u16 timeout1 =0;
+	
+	while((LED2_0)&&(timeout1++ < MAXTIMEWAITBTLINK*600))//等待配对时间 约10min
+	{
+		IWDG_ReloadCounter();
+		delay_nms(100);
+	}	
+	if(timeout1 >= MAXTIMEWAITBTLINK*600)
+	{
+		timeout1 = 0;
+		PowerDown();
+	}
+	else
+	{
+		BT_STA = 1;
+	}
+}
+
+/*********************BLSET***************************/	
+void BTSet(void)
+{
+	u8 BLset_command[] = {"AT+UART=115200,0,2\r\n"};
+	u8 timeout = 0;
+	if(0 == LoadFlash())//未设置BL
+	{
+		SetUartState(COM3,CBR_38400,USART_Parity_No);//BL 38400 1停 无
+		Set_BL_Enter();//进入AT模式
+		do
+		{
+			IWDG_ReloadCounter();
+			timeout++;
+			Clear_RxBuffer3();
+			delay_nms(1000);
+			USART3send(BLset_command,sizeof(BLset_command)-1);//设置115200 1停 偶
+			delay_nms(100);
+			if( strstr((char *)RxBuffer3,"OK")>0 )
+			{
+				break;
+			}			
+		}while(timeout<5);
+		if(timeout<5)
+		{
+			WriteFLAG();//设置完成		
+		}
+	NVIC_SystemReset();
+  }
+}
+
 void WriteFLAG(void)
 {
 	FLASH_Unlock();	   /* Unlock the Flash Program Erase controller */
@@ -684,7 +618,7 @@ u8 LoadFlash(void)
 	
 	if(FLASH_READ == 0x11011011)//已经成功设置BL
 	{
-	return 1;
+		return 1;
 	}
 	else return 0;
 }

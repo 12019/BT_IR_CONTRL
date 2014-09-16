@@ -15,10 +15,10 @@
 #define TXD_high()		GPIO_SetBits(GPIOA, GPIO_Pin_6)
 #define TXD_low()		GPIO_ResetBits(GPIOA, GPIO_Pin_6)
 
-#define	XVER 0x19 		//协议版本
+#define	XVER 0x20 		//协议版本
 #define	SVER 0x10 		//版本号
 
-#define	IWDGSW			//看门狗开关
+//#define	IWDGSW			//看门狗开关
 
 #define		IWDG_SLEEP	0x1234
 #define		IWDG_RUN		0x4321
@@ -32,17 +32,15 @@
 #define		QUEEMP		2
 #define		QUENOEGH	3
 #define		MAXOFRXQ	0x200
-#define		MAXBUFFER	0x100
+#define		MAXBUFFER	0x200
 
-#define		MAXIRBUFLEN	50
 
 #define		VBAT_MAX	0x930
 #define		VBAT_MIN	0x800
 #define		VBAT_USE	(VBAT_MAX-VBAT_MIN)
 
-#define		COMNFIR	0
-#define		COMFIR	1
-#define		COMTXON	2
+#define 	MAXTIMEWAITBTLINK 		0x05		//MIN
+#define 	MAXTIMEBTLINKEDNODATA 0x05		//MIN
 
 #define NOPARITY            USART_Parity_No 
 #define EVENPARITY          USART_Parity_Even
@@ -62,26 +60,15 @@
 #define		TRUE	1
 #define		FALSE	0
 
-#define		IRDAMODE	0
-#define		UARTMODE	1
-#define		BLMODE		2
-#define		ESAMMODE	3
-
-#define	REQ_TIMES	0x05
-#define	IRREQ_TIMES	0x10
-
-#define Byte_Time		50
-#define Byte_Time_BL 100
- 
 #define COM0	0				//红外
 #define COM1	1				//串口
 #define COM2	2				//ESAM
 #define COM3	3				//蓝牙
 
-#define ESAM COM2
-#define UART COM1
-#define iRDA COM0
-#define BL	 COM3
+#define ESAM 	COM2
+#define RS485 COM1
+#define iRDA 	COM0
+#define BL	 	COM3
 
 #define BLINKOK			0
 #define BLINKOFF		1
@@ -119,80 +106,146 @@
 #define LED2_1				0 != GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6)
 #define	LED2_0				0 == GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6)
 
-//IO口操作宏定义
-#define BITBAND(addr, bitnum) ((addr & 0xF0000000)+0x2000000+((addr &0xFFFFF)<<5)+(bitnum<<2)) 
-#define MEM_ADDR(addr)  *((volatile unsigned long  *)(addr)) 
-#define BIT_ADDR(addr, bitnum)   MEM_ADDR(BITBAND(addr, bitnum)) 
-//IO口地址映射
-#define GPIOA_ODR_Addr    (GPIOA_BASE+12) //0x4001080C 
-#define GPIOB_ODR_Addr    (GPIOB_BASE+12) //0x40010C0C 
-#define GPIOC_ODR_Addr    (GPIOC_BASE+12) //0x4001100C 
-#define GPIOD_ODR_Addr    (GPIOD_BASE+12) //0x4001140C 
-#define GPIOE_ODR_Addr    (GPIOE_BASE+12) //0x4001180C 
-#define GPIOF_ODR_Addr    (GPIOF_BASE+12) //0x40011A0C    
-#define GPIOG_ODR_Addr    (GPIOG_BASE+12) //0x40011E0C    
 
-#define GPIOA_IDR_Addr    (GPIOA_BASE+8) //0x40010808 
-#define GPIOB_IDR_Addr    (GPIOB_BASE+8) //0x40010C08 
-#define GPIOC_IDR_Addr    (GPIOC_BASE+8) //0x40011008 
-#define GPIOD_IDR_Addr    (GPIOD_BASE+8) //0x40011408 
-#define GPIOE_IDR_Addr    (GPIOE_BASE+8) //0x40011808 
-#define GPIOF_IDR_Addr    (GPIOF_BASE+8) //0x40011A08 
-#define GPIOG_IDR_Addr    (GPIOG_BASE+8) //0x40011E08 
- 
-//IO口操作,只对单一的IO口!
-//确保n的值小于16!
-#define PAout(n)   BIT_ADDR(GPIOA_ODR_Addr,n)  //输出 
-#define PAin(n)    BIT_ADDR(GPIOA_IDR_Addr,n)  //输入 
 
-#define PBout(n)   BIT_ADDR(GPIOB_ODR_Addr,n)  //输出 
-#define PBin(n)    BIT_ADDR(GPIOB_IDR_Addr,n)  //输入 
-
-#define PCout(n)   BIT_ADDR(GPIOC_ODR_Addr,n)  //输出 
-#define PCin(n)    BIT_ADDR(GPIOC_IDR_Addr,n)  //输入 
-
-#define PDout(n)   BIT_ADDR(GPIOD_ODR_Addr,n)  //输出 
-#define PDin(n)    BIT_ADDR(GPIOD_IDR_Addr,n)  //输入 
-
-#define PEout(n)   BIT_ADDR(GPIOE_ODR_Addr,n)  //输出 
-#define PEin(n)    BIT_ADDR(GPIOE_IDR_Addr,n)  //输入
-
-#define PFout(n)   BIT_ADDR(GPIOF_ODR_Addr,n)  //输出 
-#define PFin(n)    BIT_ADDR(GPIOF_IDR_Addr,n)  //输入
-
-#define PGout(n)   BIT_ADDR(GPIOG_ODR_Addr,n)  //输出 
-#define PGin(n)    BIT_ADDR(GPIOG_IDR_Addr,n)  //输入
 
 typedef struct	
-	{   
+{   
 	u8 elem[MAXOFRXQ];   
 	u16 head,tail;   
-	}Quque;
-	
+}Quque;
+
+
+
+typedef struct
+{
+	unsigned char yearh;
+  unsigned char yearl;
+  unsigned char mon;
+  unsigned char date;
+  unsigned char hour;
+  unsigned char min;
+  unsigned char sec;
+}Time_Def;
+
+typedef struct 
+{
+	unsigned char IrDAisconfed;
+	unsigned char RS485isconfed;
+	unsigned char SleepTime;
+	unsigned char OutTime_IRDA;
+	unsigned char OutTime_RS485;
+}Sys_Confed;
+
+typedef struct 
+{
+	unsigned int Sleep_run_Time;
+	unsigned int Out_run_Time_IRDA;
+	unsigned int Out_run_Time_RS485;
+}Sys_Runed;
+
+
+typedef struct 
+{
+	unsigned char LPW:1;
+	unsigned char VERB:3; 
+	unsigned char NONE:3;
+	unsigned char DIR:1;
+}contrl_byte_t;
+
+typedef struct 
+{
+	unsigned char Port;
+	unsigned char BaudRate;
+	unsigned char Parity;
+	unsigned char SleepTime;
+}AFN0d_buf_t;
+typedef struct 
+{
+	unsigned char Port;
+	unsigned char End_rep;
+}AFN0u_buf_t;
+
+typedef struct 
+{
+	unsigned char Port;
+	unsigned char OutTime_Thisport;
+	unsigned char TranLen;
+	unsigned char TranDate[0xff];
+}AFN1d_buf_t;
+typedef struct 
+{
+	unsigned char Port;
+	unsigned char TranRep;
+}AFN1u_buf_t;
+
+typedef struct 
+{
+	unsigned char Port;
+	unsigned char ReqLen;
+}AFN2d_buf_t;
+typedef struct 
+{
+	unsigned char Port;
+	unsigned char ReqRealLen;
+	unsigned char ReqRealData[0xff];
+}AFN2u_buf_t;
+
+typedef struct 
+{
+	unsigned char Port;
+	unsigned char DBAddr[6];
+	unsigned char TransLen;
+	unsigned char TransData[0xff];
+}AFN3d_buf_t;
+
+
+typedef struct 
+{
+	unsigned char Dataisready;
+	unsigned char Contrl;
+	unsigned char AFN;
+	AFN0d_buf_t AFN0dbuf;
+	AFN1d_buf_t AFN1dbuf;
+	AFN2d_buf_t AFN2dbuf;
+	AFN3d_buf_t AFN3dbuf;
+}Data_dbuf_t;
+
+typedef struct 
+{
+	unsigned char AFN;
+	AFN0u_buf_t AFN0ubuf;
+	AFN1u_buf_t AFN1ubuf;
+	AFN2u_buf_t AFN2ubuf;
+}Data_ubuf_t;
+
+
+
+typedef struct 
+{
+	unsigned char head;
+	unsigned char len;
+	unsigned char contrl;
+	Data_ubuf_t Data_uBuf;
+	unsigned char End;
+}Frame_ut;
+
 #ifdef  root
 	#define EXT_ 
 #else
 	#define EXT_  extern
 #endif
 
-//EXT_ u8	RX;
-EXT_ u8	RxTmp[0x20];
-EXT_ u8 RxData1;
-EXT_ u8 RxData2;
-EXT_ u8	RxTmp2[0x20];
-EXT_ u8 Rx2len;
+EXT_ Time_Def BuildTime;
 	
-EXT_ Quque RxQUE1;
-EXT_ Quque RxQUE2;
-EXT_ Quque RxQUE3;
+EXT_ Quque IrDARxQUE;
+EXT_ Quque RS485RxQUE;
 	
 EXT_ u8 *TxBuffer1;
-EXT_ u8 RxBuffer1[MAXBUFFER];
 EXT_ u8 *TxBuffer2;
 EXT_ u8 RxBuffer2[MAXBUFFER];
 EXT_ u8 *TxBuffer3;
 EXT_ u8 RxBuffer3[MAXBUFFER];
-//EXT_ u8 RxBufferIR[MAXBUFFER];
 	
 EXT_ vu16 TxCounter1;
 EXT_ vu16 RxCounter1;
@@ -200,11 +253,15 @@ EXT_ vu16 TxCounter2;
 EXT_ vu16 RxCounter2; 
 EXT_ vu16 TxCounter3;
 EXT_ vu16 RxCounter3; 
-//EXT_ vu16 RxCounterIR; 
 
 EXT_ u16 MaxNbrofTx1;
 EXT_ u16 MaxNbrofTx2;
 EXT_ u16 MaxNbrofTx3;
+
+EXT_ Data_dbuf_t Dat_dbuf;
+EXT_ Sys_Confed Sys_config;
+EXT_ Sys_Runed Sys_run;
+EXT_ Frame_ut ReturnFeame;
 
 EXT_ u8 BL_STA;//1未连接 2已连接 3电量低
 EXT_ u8 LED_STA;//LED状态保存
@@ -248,33 +305,16 @@ EXT_ u8 Rx_Parity_tmp;
 EXT_ vu16 IrDARxCounter;
 EXT_ u8 IrDARxBuffer1[MAXBUFFER];
 
-EXT_ vu16 IrRxCounter;
-
-EXT_ u8 IrBuf[MAXIRBUFLEN];
-
 EXT_ u16 IR_BaudRate_Time;
 
-EXT_ u8  AT_FLAG;//AT模式标志
-EXT_ u8  OK;//BL set flag
-EXT_ u8	 TrasferMode;//0透传   3红外抄表   4ESAM
-EXT_ u8  BL_REQ_FLAG;//1:第一帧读参数应答标志 2:第二帧及以后数据
-EXT_ u8  IR_TC;
-EXT_ u8  Rs485_TC;
-EXT_ u8  IR_DB_RZ;//红外认证标志 0不认证 1认证 
-EXT_ u8  ZF_LEN;//转发长度为0标志
-EXT_ u8  Ver_flag;//红外透传、协议标志
-EXT_ u8  IR_to_BL;//IR回传标志
-EXT_ u8  POW_IR;//IR电源标志
+EXT_ u8  POW_RS485;//485电源标志 1 ON 0 OFF
+EXT_ u8  POW_IR;//IR电源标志 1 ON 0 OFF
+EXT_ u8  POW_ESAM;//ESAM电源标志 1 ON 0 OFF
 
-EXT_ __IO uint32_t TimingDelay ;
+EXT_ u8  Ver_flag;//协议标志
 
-EXT_ vu16 Usart3_Wtime;	//串口3蓝牙接收数据间隔时长
-EXT_ vu8 	Usart3_EN;		//串口3蓝牙接收数据有效
-
-EXT_ vu16 IR_Wtime;
-
-//EXT_ vu8 Buf_Flag;
-EXT_ vu8 IrTimeBegin;
+EXT_ u8	BT_STA;
+EXT_ u16 BT_BlinkT;
 
 /** @defgroup config_Exported_Functions
   * @{
@@ -307,15 +347,14 @@ void Check_Rst(void);
 void SysTick_Configuration(void);
 u8 Bcd2Hex(u8 b);
 u8 Hex2Bcd(u8 b);
-void GetBuildTime(unsigned char *date);
+void GetBuildTime(void);
 /*******UART功能函数区*************/
 void USART1send(u8 *buffer,u16 len);
 void USART2send(u8 *buffer,u16 len);
 void USART3send(u8 *buffer,u16 len);
-//void BLSETsend(u8 *buffer);
 /*******系统处理解析相关*************/
 u8 CheckHE(void);
-u8 CheckSum(void);
+u8 CheckSum(u8 *buffer, u8 len);
 u8 CheckDB(void);
 
 void Set_Sys(void);
@@ -329,20 +368,28 @@ void PowerOff(void);
 void Set_BL_Enter(void);
 void Set_BL_Exit(void);
 void Req_Irda(void);
+void Wait_BTlink(void);
 void Req_BL(void);
+
+void BT_Analysis(void);
+void Time_Comp(void);
 
 void BL_Unpack(u8 *Buffer, u16 Length);
 void ESAM_Info(void);
-
 /*******模拟串口功能函数区*************/
 void IR_GPIO_Init(void);
-
 void SendOneByte(u8 Byte);
-//void SendStr(u8 *str);
 void SendBytes(u8 *str,u8 len);
 
 void EXTI9_5_DISABLE(void);
 void EXTI9_5_ENABLE(void);
+
+void Set_IRDA_power_ON(void);
+void Set_IRDA_power_OFF(void);
+void Set_RS485_power_ON(void);
+void Set_RS485_power_OFF(void);
+void Set_ESAM_power_ON(void);
+void Set_ESAM_power_OFF(void);
 
 void delay_nms(uint16_t time1);
 void delay_nus(uint16_t time2);
@@ -361,6 +408,7 @@ u8 Ir_wait(void);
 void WriteFLAG(void);
 u8 FlashWrite(u32 Data);
 u8 LoadFlash(void);
+void BTSet(void);
 
 void myADC_init(void);
 u16 ADC_filter(void);

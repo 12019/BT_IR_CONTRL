@@ -244,8 +244,7 @@ void SysTick_Handler(void)
 					}
 					else 
 					{		
-						IR_to_BL = 1;		
-						InsertQue(&RxQUE2,tmp_data);
+						InsertQue(&IrDARxQUE,tmp_data);
 					}
 				}
 				RX_FLAG = 0;
@@ -254,8 +253,6 @@ void SysTick_Handler(void)
 				EXTI9_5_ENABLE();			
 			}
 		}
-		IR_Wtime = 0;
-		IrTimeBegin = 1;
 	}	
 }
 
@@ -270,7 +267,7 @@ void USART1_IRQHandler(void)//485
 { 
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
-			InsertQue(&RxQUE1, USART_ReceiveData(USART1));
+			InsertQue(&RS485RxQUE, USART_ReceiveData(USART1));
 	}
 	
 	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
@@ -319,74 +316,15 @@ void USART2_IRQHandler(void)//ESAM 协议支持
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void USART3_IRQHandler(void)
+void USART3_IRQHandler(void)//蓝牙通道
 {
 	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)//接收寄存器满中断
 	{
-		time_sleep = 0;
-		POW_TIME = 0;
-		
-		if(BL_REQ_FLAG == 1)//读参数应答第一帧数据
-		{
-		/* Read one byte from the receive data register */		
-		InsertQue(&RxQUE3, USART_ReceiveData(USART3));	
-		}	
-		else if(BL_REQ_FLAG == 2)//非第一帧应答数据 
-		{
-			if(TrasferMode == 0)//透传字节转发
-			{
-				InsertQue(&RxQUE3,USART_ReceiveData(USART3));
-				
-				if(W_Mode == IRDAMODE)//红外通道透传
-				{
-					POW_IR = 1;
-//					InsertQue(&RxQUE3,USART_ReceiveData(USART3));
-				}
-//				else if((W_Mode == UARTMODE)&&(sysread == 1))//485通道数据透传 USART1
-//				{
-//					InsertQue(&RxQUE3,USART_ReceiveData(USART3));	
-//				}
-			}
-			else//协议支持  TrasferMode:03=红外抄表	04=ESAM
-			{
-					POW_IR = 1;
-					
-				/* Read one byte from the receive data register */
-					RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);
-					if(Usart3_EN == 0)
-					{
-						Usart3_EN = 1;
-						Usart3_Wtime = 0;
-					}
-					else
-					{
-						Usart3_Wtime = 0;
-					}
-			}
-		}
-		
-		if(AT_FLAG)//AT配置应答
-		{
-			RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);		
-			
-			if((RxBuffer3[RxCounter3-2] == 0x4f)&&(RxBuffer3[RxCounter3-1] == 0x4b))
-			{
-				OK = 1;
-			}
-			if(RxCounter3 == 4)
-			{
-				AT_FLAG = 0;
-			}
-		}	
-		
-	}  
-	
+		RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);
+	}	
 	if(USART_GetITStatus(USART3, USART_IT_TXE) != RESET)//协议支持 透传在中断中处理
-	{  
-		time_sleep = 0;	
-		
-		USART_SendData(USART3, TxBuffer3[TxCounter3++]);
-		
+	{		
+		USART_SendData(USART3, TxBuffer3[TxCounter3++]);		
 		if(TxCounter3 >= MaxNbrofTx3)
 		{				
 			/* Disable the USART1 Transmit interrupt */
@@ -401,39 +339,28 @@ void TIM3_IRQHandler(void)//帧数据结束计时器
 	{
 		/* Clear TIM3 Update interrupt pending bit*/
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-		
-			time_sleep++;
-		
-			POW_TIME++;
-		
-			if(BL_STA == 1)//BL未连接
+
+		if(BT_STA == 0)//BL未连接
+		{
+			BT_BlinkT++;
+			if(BT_BlinkT == 200)
 			{
-				BL_TIME++;
-				if(BL_TIME == 200)
-				{
-					BL_TIME = 0;
-					RUN_TOG();
-				}
+				BT_BlinkT = 0;
+				RUN_TOG();
 			}
-			else if(BL_STA == 2)//BL已连接
+		}
+		else if(BT_STA == 1)//BL已连接
+		{
+			BT_BlinkT++;
+			if(BT_BlinkT == 1000)
 			{
-				BL_TIME++;
-				if(BL_TIME == 1000)
-				{
-					BL_TIME = 0;
-					RUN_TOG();
-				}
+				BT_BlinkT = 0;
+				RUN_TOG();
 			}
-		
-			if(Usart3_EN == 1)
-			{
-				Usart3_Wtime++;
-			}	
-			
-			if(IrTimeBegin)
-			{
-				IR_Wtime++;
-			}
+		}
+		Sys_run.Out_run_Time_IRDA++;
+		Sys_run.Out_run_Time_RS485++;
+		Sys_run.Sleep_run_Time++;
 	}
 }
 
@@ -442,14 +369,10 @@ void EXTI9_5_IRQHandler(void)//PA5
    if(EXTI_GetITStatus(EXTI_Line5) != RESET)
 	{
 	/* Disable the Selected IRQ Channels -------------------------------------*/
-	//   	  NVIC->ICER[EXTI9_5_IRQn >> 0x05] =
-	//      		(uint32_t)0x01 << (EXTI9_5_IRQn & (uint8_t)0x1F);
 		EXTI_ClearITPendingBit(EXTI_Line5);
-		if(TX_FLAG == 0)
+		if((TX_FLAG == 0)&&(RX_FLAG == 0))
 		{
 			RX_FLAG = 1;
-//			CountRX = 0;
-//			Receive_bit = 0;
 			EXTI9_5_DISABLE();
 		}
 	}

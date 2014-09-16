@@ -16,13 +16,10 @@
   * @retval None
   */
 extern __IO uint16_t ADC_ConvertedValue;
-	
+
+
 int main(void)
 {			
-	vu16 Convert = 0;
-	u8 i = 0;
-	u8 BLset_command[] = {"AT+UART=115200, 0,2\r\n"};
-	u8 IrData = 0,Rx485 = 0,Tx485 = 0;
 	
 	/* System Clocks Configuration */
 	RCC_Configuration();
@@ -38,167 +35,51 @@ int main(void)
 	/*7816 configuration*/
 	ISO7816_Enable();
 	/*TIM configuration*/
+	Sys_run.Out_run_Time_IRDA = 0;
+	Sys_run.Out_run_Time_RS485 = 0;
+	Sys_run.Sleep_run_Time = 0;
 	TIM_Configuration();
 	/* NVIC configuration */
 	NVIC_Configuration(); 		
-  /* Configure the SysTick to generate an interrupt each 10 millisecond */
+  /* Configure the SysTick to generate an interrupt each 10 Microseconds */
   SysTick_Configuration();
 	/*ADC configuration*/
 	myADC_init();	
 	
-/*********************BLSET***************************/	
-if(0 == LoadFlash())//未设置BL
-{
-	PWR_BL_ON();
-	AT_FLAG = 0;
-	IWDG_ReloadCounter();
-	Clear_RxBuffer3();
-	SetUartState(COM3,CBR_38400,USART_Parity_No);//BL 38400 1停 无
-	Set_BL_Enter();//进入AT模式
-	delay_nms(1000);
-	USART3send(BLset_command,sizeof(BLset_command)-1);//设置115200 1停 偶
-	while(!OK)//'OK' 
-	{
-		delay_nms(10);
-		i++;
-		if(i>=30)//BL设置失败 超过3s超时退出
-		{
-		NVIC_SystemReset();
-		}
-	}
-	WriteFLAG();//设置完成
-	NVIC_SystemReset();
-}
+	BTSet();
+
 /*****************************************************/	
 	
  	PowerOff();
 	
-	GET_ESAM = 0;//默认关闭ESAM数据获取
-	IrTimeBegin = 0;
-	IrRxCounter = 0;
-	POW_IR = 1;
-	OK = 0;
-	Ver_flag = 0;
-	IR_to_BL = 0;
-	BL_STA = 0;
-	BL_TIME = 0;
-	Bat_Low = 0;
-	Bat_FLAG = 0;
-	POW_TIME = 0;
-	BL_REQ_FLAG = 0;//读参数应答数据帧标志
-	TX_FLAG = 0;
-	RX_FLAG = 0;
-	IR_TC = 0;
-	Rs485_TC = 0;
-	IR_DB_RZ = 0;
-	ZF_LEN = 1;
-	Usart3_Wtime = 0;
-	IR_Wtime = 0;
-	time_sleep = 0;
-	sysread = 0;
-	W_Mode = BLMODE;
-	W_Time = 10;//初始化等待休眠时间 分钟
-	IR_BaudRate_Time = 83;//IR BaudRate
-	
-	InitQue(&RxQUE1);//485接收队列
-	InitQue(&RxQUE2);//红外接收队列
-	InitQue(&RxQUE3);//蓝牙接收队列
+	InitQue(&RS485RxQUE);//485接收队列
+	InitQue(&IrDARxQUE);//红外接收队列
 
 	Clear_RxBuffer2();
 	Clear_RxBuffer3();
+//	ESAM_Info();
+//	W_Bat = ADC_filter();
 	
-	ESAM_Info();
-	W_Bat = ADC_filter();
+	
 	
 	PowerUp();//BL等待配对	
+	
 	delay_nms(100);
-	Req_BL();//请求蓝牙数据
+	BT_STA = 0;
+	IR_BaudRate_Time = 83;
+//	Set_IRDA_power_ON();
+	Wait_BTlink();
+	Sys_config.SleepTime = MAXTIMEBTLINKEDNODATA;
 	
   while (1)
   {
-		IWDG_ReloadCounter();		
-
-		if(IR_TC == 1)//红外通道透传
-		{
-			while(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
-			{
-				OutQueOneByte(&RxQUE3,&IrData);
-				ResetQue(&RxQUE2);
-				SendOneByte(IrData);
-			}
-		}
-		else if(Rs485_TC == 1)//485通道透传
-		{
-			if(IsEmpty(&RxQUE3) != QUEEMP)//队列非空
-			{
-				OutQue(&RxQUE3,&Rx485,1);
-				USART1send(&Rx485,1);//BL发给485
-			}
-			
-			if(IsEmpty(&RxQUE1) != QUEEMP)//队列非空
-			{
-				OutQue(&RxQUE1,&Tx485,1);
-				USART3send(&Tx485,1);//485数据透传给BL
-			}
-		}
-		else//协议支持
-		{
-			if(Usart3_Wtime > Byte_Time)//蓝牙接收数据帧结束
-			{
-				Usart3_Wtime = 0;
-				Usart3_EN = 0;
-				
-				if(TrasferMode == 3)//红外抄表
-				{
-					BL_Unpack(RxBuffer3,RxCounter3);//帧数据解包
-				}
-			}
-		}
+//		IWDG_ReloadCounter();		
 		
-		if(IR_to_BL == 1)//数据回传
-		{
-			if(NumOfQue(&RxQUE2) > MAXIRBUFLEN)
-			{
-				OutQue(&RxQUE2,IrBuf,MAXIRBUFLEN);
-				USART3send(IrBuf,MAXIRBUFLEN);
-			}
-			else if(IR_Wtime >= Byte_Time_BL)
-			{
-				IrTimeBegin = 0;
-				IR_Wtime = 0;
-				IrRxCounter = NumOfQue(&RxQUE2);
-				if(IrRxCounter > 0)
-				{
-					OutQue(&RxQUE2,IrBuf,IrRxCounter);
-					USART3send(IrBuf,IrRxCounter);						
-				}
-			}			
-		}
-		
-		if(POW_TIME>=M_Time*1000)//关IR or 485
-		{
-			POW_TIME = 0;
-			PWM_Disable();
-			PWR_IR_OFF();
-			PWR_485_OFF();
-		}
-	
-		if(Bat_Low&&((W_Time*60*1000-time_sleep)>120000))//电量低且时间大于2MIN
-		{
-			Bat_Low = 0;
-			W_Time = 2;
-			time_sleep = 0;
-		}
-		
-		if(time_sleep>=(W_Time*60*1000))//等待休眠时间 无数据超时进入睡眠模式 
-		{
-			time_sleep = 0;
-			PowerDown();
-		}
-		
+		BT_Analysis();
+//		Time_Comp();
 		if(LED2_0)//断开服务
 		{
-			NVIC_SystemReset();
+//			NVIC_SystemReset();
 		}
 	}
 }

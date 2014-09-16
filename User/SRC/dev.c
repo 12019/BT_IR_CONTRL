@@ -1,154 +1,6 @@
 #include "myconfig.h"
 #include "string.h"
 #include <stdio.h>
-/*******************************************************************************
-* Function Name  : Quque_Configuration
-* Description    : Configures the Quque.
-* Input          : None
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void InitQue(Quque *q)
-{
-	u16 i;
-	q->head = 0;
-	q->tail = 0;
-
-	for(i=0;i<MAXOFRXQ;i++)
-	{
-		q->elem[i] = 0x00;
-	}
-}
-void ResetQue(Quque *q)
-{
-	q->head = 0;
-	q->tail = 0;
-}
-
-u8 IsFull(Quque *q)
-	{
-	if(q->head==(q->tail+1)%MAXOFRXQ)  
-		return QUEFULL;
-	else
-		return 0;	
-	}
-	
-	
-u8 InsertQue(Quque *q,u8 elem)
-{
-if(IsFull(q) == QUEFULL) 
-return QUEFULL;
-q->elem[q->tail]=elem;
-q->tail=(q->tail+1)%MAXOFRXQ; 
-return QUESUC;
-}
-	
-u8 IsEmpty(Quque *q)
-{
-if(q->head==q->tail)
-return QUEEMP;
-else 
-return QUESUC;
-}
-
-u8 OutQueOneByte(Quque *q,u8 *pelem)
-{
-	if(IsEmpty(q) == QUEEMP)
-	{
-		return QUEEMP;		
-	}
-	pelem[0] = q->elem[q->head];
-	q->head =(q->head+1)%MAXOFRXQ;
-	return QUESUC;
-}
-	
-u8 OutQue(Quque *q,u8 *pelem,u16 len)
-{
-	u16 i;
-	if(IsEmpty(q) == QUEEMP)
-	{
-		return QUEEMP;		
-	}
-	if(q->head < q->tail)
-	{
-		if((q->tail - q->head)<len)
-			return QUENOEGH;
-		else
-		{
-			for(i=0;i<len;i++)
-			{
-				pelem[i] = q->elem[q->head + i];
-			}
-			q->head =(q->head+len)%MAXOFRXQ;
-		}
-	}
-	else if(q->head > q->tail)
-	{
-		if((MAXOFRXQ - q->head + q->tail )<len)
-			return QUENOEGH;
-		else if((MAXOFRXQ - q->head)>len)
-		{			
-			for(i=0;i<len;i++)
-			{
-				pelem[i] = q->elem[q->head + i];
-			}
-			q->head =(q->head+len)%MAXOFRXQ;
-		}
-		else 
-			{
-				for(i=0;i<(MAXOFRXQ-q->head);i++)
-				{
-					pelem[i] = q->elem[q->head + i];
-				}
-				for(i=(MAXOFRXQ-q->head);i<len;i++ )
-				{
-					pelem[i] = q->elem[(q->head + i)%MAXOFRXQ];
-				}
-				q->head =(q->head+len)%MAXOFRXQ;
-			}
-	}
-	return QUESUC;
-}
-
-u8 AllOutQue(Quque *q,u8 *pelem)
-	{
-	u16 i;
-	if(IsEmpty(q) == QUEEMP)
-		return QUEEMP;
-	if(q->head > q->tail)
-		{
-		for(i=0;i<(MAXOFRXQ - q->head + q->tail);i++)
-			{
-			pelem[i] = q->elem[q->head + i];
-			}				
-		InitQue(q);
-		}
-	if(q->head < q->tail)
-		{
-		for(i=0;i<(q->tail - q->head);i++)
-			{
-			pelem[i] = q->elem[q->head + i];
-			}
-		InitQue(q);
-		}		
-	return QUESUC;
-	}
-	
-u16 NumOfQue(Quque *q)
-	{
-	u16 Re;
-	if(IsEmpty(q) == QUEEMP)
-		Re = 0;
-	else if(q->head > q->tail)
-		{
-		Re = MAXOFRXQ - q->head + q->tail;
-		}
-	else if(q->head < q->tail)
-		{
-		Re = q->tail - q->head;
-		}
-	return Re;
-	}
 
 /*******************************************************************************
 * Function Name  : RCC_Configuration
@@ -684,13 +536,6 @@ void USART3send(u8 *buffer,u16 len)
 	while(TxCounter3 < MaxNbrofTx3);
 	}
 	
-//void BLSETsend(u8 *buffer)
-//	{
-//	TxCounter3 = 0;
-//	TxBuffer3 = buffer;
-//	USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
-//	while((TxBuffer3[TxCounter3-1]!=0x0D)||(TxBuffer3[TxCounter3]!=0x0A));
-//	}	
 	
 /*******************************************************************************
 * Function Name  : TIM_Configuration
@@ -786,45 +631,45 @@ void IWDG_Configuration(void)
 
 void IR_GPIO_Init(void)
 {
-   GPIO_InitTypeDef GPIO_InitStructure;
-   EXTI_InitTypeDef EXTI_InitStructure;
-   NVIC_InitTypeDef NVIC_InitStructure;
-   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO,ENABLE);
+	GPIO_InitTypeDef GPIO_InitStructure;
+	EXTI_InitTypeDef EXTI_InitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO,ENABLE);
 
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;				 //PA.6 端口配置
-   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 		 //推挽输出
-   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		 //IO口速度为50MHz
-   GPIO_Init(GPIOA, &GPIO_InitStructure);					 //根据设定参数初始化GPIOA.6
-	 GPIO_SetBits(GPIOA,GPIO_Pin_6);						 
-	
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
-   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;			  //浮空输入
-   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	    		 
-   GPIO_Init(GPIOA, &GPIO_InitStructure);	  				
-	 GPIO_SetBits(GPIOA,GPIO_Pin_5); 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;				 //PA.6 端口配置
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 		 //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		 //IO口速度为50MHz
+	GPIO_Init(GPIOA, &GPIO_InitStructure);					 //根据设定参数初始化GPIOA.6
+	GPIO_SetBits(GPIOA,GPIO_Pin_6);						 
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;			  //浮空输入
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	    		 
+	GPIO_Init(GPIOA, &GPIO_InitStructure);	  				
+	GPIO_SetBits(GPIOA,GPIO_Pin_5); 
    
-     //GPIOA.5 中断线以及中断初始化配置   下降沿触发
-  	GPIO_EXTILineConfig(GPIO_PortSourceGPIOA,GPIO_PinSource5);
+	//GPIOA.5 中断线以及中断初始化配置   下降沿触发
+	GPIO_EXTILineConfig(GPIO_PortSourceGPIOA,GPIO_PinSource5);
 
-  	EXTI_InitStructure.EXTI_Line=EXTI_Line5;	
-  	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
-  	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-  	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-  	EXTI_Init(&EXTI_InitStructure);	 	//根据EXTI_InitStruct中指定的参数初始化外设EXTI寄存器
+	EXTI_InitStructure.EXTI_Line=EXTI_Line5;	
+	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+	EXTI_Init(&EXTI_InitStructure);	 	//根据EXTI_InitStruct中指定的参数初始化外设EXTI寄存器
 
-		NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority =0;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);				 
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority =0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);				 
 }
 
 void EXTI9_5_DISABLE(void)
 {
 	NVIC_InitTypeDef NVIC_InitStructure;
-//	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
-//	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority =0;
-//	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority =0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
 	NVIC_Init(&NVIC_InitStructure);	
 }
@@ -905,7 +750,7 @@ u8 Bcd2Hex(u8 b)
 	return hex ;
 }
 
-void GetBuildTime(unsigned char *date)
+void GetBuildTime(void)
 {
 	char Date[] = __DATE__;
 	char Time[] = __TIME__;
@@ -914,11 +759,56 @@ void GetBuildTime(unsigned char *date)
 	int mon=0, day=0, year=0;
 	int sec=0, min=0, hour=0;
 	sscanf(Date, "%s %d %d", mon_s, &day, &year);
-	sscanf(Time, "%d:%d:%d", &sec, &min, &hour);	
+	sscanf(Time, "%d:%d:%d", &hour, &min, &sec);	
 	mon = (strstr(month_names, mon_s)-month_names)/3+1;
-	date[0] = Hex2Bcd((unsigned char)day);
-	date[1] = Hex2Bcd((unsigned char)mon);
-	date[2] = Hex2Bcd((unsigned char)(year%100));	
-	date[3] = (char)(sec+min+hour);
+	BuildTime.date = Hex2Bcd((unsigned char)day);
+	BuildTime.mon = Hex2Bcd((unsigned char)mon);
+	BuildTime.yearh = 0x20;//Hex2Bcd(0x14);
+	BuildTime.yearl = Hex2Bcd((unsigned char)(year%100));	
+	BuildTime.hour = Hex2Bcd((unsigned char)hour);
+	BuildTime.min = Hex2Bcd((unsigned char)min);
+	BuildTime.sec = Hex2Bcd((unsigned char)sec);
 }
+void Set_IRDA_power_ON(void)
+{
+	IR_GPIO_Init();
+	PWM_Enable();
+	PWR_IR_ON();
+	TX_FLAG = 0;
+	RX_FLAG = 0;
+	POW_IR = 1;
+}
+void Set_IRDA_power_OFF(void)
+{
+//	EXTI9_5_DISABLE();
+	PWM_Disable();
+	PWR_IR_OFF();
+	POW_IR = 0;
+}
+
+void Set_RS485_power_ON(void)
+{	
+	PWR_485_ON();
+	POW_RS485 = 1;
+}
+void Set_RS485_power_OFF(void)
+{	
+	PWR_485_OFF();	
+	POW_RS485 = 0;
+}
+void Set_ESAM_power_ON(void)
+{
+	ISO7816_Enable();
+	PWR_ESAM_ON();	
+	POW_ESAM = 0;
+}
+void Set_ESAM_power_OFF(void)
+{
+	ISO7816_Disable();
+	PWR_ESAM_OFF();
+	POW_ESAM =1;
+}
+
+
+
 

@@ -13,7 +13,7 @@ u8 DBESAMID[8];	//µç±íESAMµÄID
 void ESAM_Reset(void)
 {
 	delay_nms(10);
-	PWR_ESAM_ON();
+	Set_ESAM_power_ON();
 	delay_nms(100);
 	GPIO_ESAMRST_ON();/* Set RSTIN LOW */  
 	delay_nms(0x100);	
