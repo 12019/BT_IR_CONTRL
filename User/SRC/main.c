@@ -38,6 +38,7 @@ int main(void)
 	Sys_run.Out_run_Time_IRDA = 0;
 	Sys_run.Out_run_Time_RS485 = 0;
 	Sys_run.Sleep_run_Time = 0;
+	Sys_run.Sleep_run_Time_BatLow = 0;
 	TIM_Configuration();
 	/* NVIC configuration */
 	NVIC_Configuration(); 		
@@ -45,7 +46,6 @@ int main(void)
   SysTick_Configuration();
 	/*ADC configuration*/
 	myADC_init();	
-	
 	BTSet();
 
 /*****************************************************/	
@@ -57,29 +57,30 @@ int main(void)
 
 	Clear_RxBuffer2();
 	Clear_RxBuffer3();
-//	ESAM_Info();
-//	W_Bat = ADC_filter();
+	Sys_config.Sys_ready = SYSNOTREADY;
 	
 	
 	
 	PowerUp();//BL等待配对	
 	
 	delay_nms(100);
-	BT_STA = 0;
-	IR_BaudRate_Time = 83;
-//	Set_IRDA_power_ON();
+	BT_STA = LEDSTA_BTLINKOFF;
+	IR_BaudRate_Time = 83;	
 	Wait_BTlink();
 	Sys_config.SleepTime = MAXTIMEBTLINKEDNODATA;
 	
   while (1)
   {
-//		IWDG_ReloadCounter();		
+#ifdef  IWDGSW
+		IWDG_ReloadCounter();		
+#endif
 		
 		BT_Analysis();
-//		Time_Comp();
+		Time_Comp();
+		ADC_filter();
 		if(LED2_0)//断开服务
 		{
-//			NVIC_SystemReset();
+			NVIC_SystemReset();
 		}
 	}
 }

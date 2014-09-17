@@ -12,8 +12,8 @@ u8 DBESAMID[8];	//电表ESAM的ID
 
 void ESAM_Reset(void)
 {
-	delay_nms(10);
-	Set_ESAM_power_ON();
+//	delay_nms(10);
+//	Set_ESAM_power_ON();
 	delay_nms(100);
 	GPIO_ESAMRST_ON();/* Set RSTIN LOW */  
 	delay_nms(0x100);	
@@ -638,7 +638,7 @@ u8 DoVerifica(u8 *DbAddr)
 	{
 		pCommand1[5+i] = DbAddr[i];
 	}
-Mem_Reverse(DbAddr, 6, DBADD);
+	Mem_Reverse(DbAddr, 6, DBADD);
 	ReadRand1();
 	Re = GetDBInfo(DbAddr);
 	if(Re == 0)
@@ -647,10 +647,10 @@ Mem_Reverse(DbAddr, 6, DBADD);
 		return Re;
 	}
 	
-ReadEncData1_Private(DbAddr);
+	ReadEncData1_Private(DbAddr);
 	if(CompEncData1() == 1)
 	{
-ReadEncData2_Private(DbAddr);
+		ReadEncData2_Private(DbAddr);
 		Mem_Reverse(ESAMEncData2, 8, ESAMEncData2_b);
 		for(i=0;i<8;i++)
 		{
@@ -677,7 +677,7 @@ ReadEncData2_Private(DbAddr);
 	}
 	else
 	{
-ReadEncData1_Public(DbAddr);
+		ReadEncData1_Public(DbAddr);
 		if(CompEncData1() == 1)
 		{
 			ReadEncData2_Publice();
@@ -754,66 +754,23 @@ u8 ReadESAMSta(void)
 	return Re;
 }
 
-void Get_ESAM_Data(void)
+void Get_ESAM_Data(u8 *DbAddr, u8 *Redata)
 {
-	u8 i = 0;
-	u8 Dbad[6] = {0};
-		         /* S    L   蓝牙模块发出  AFN  认证失败  CS    P */
-	u8 RZSB[] = {0xA9,0x07,0x80,         0x04,0xff,    0x00,0x16};
-//	u8 DBADD[6];
-	u8 ESAM_Data_Send_Back[23] = {0xa9,0x17,0x84,0x04,0x11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x00,0x16};
-	
-	PWR_ESAM_ON();
-	PWM_Enable();
-	PWR_IR_ON();			
-	
-	for(i=0;i<6;i++)
+	u8 DBADD[6];
+	u8 i;
+	Mem_Reverse(DbAddr, 6, DBADD);
+	ReadRand1();
+	ReadEncData1_Private(DbAddr);
+	for(i=0;i<8;i++)
 	{
-	Dbad[i] = RxBuffer3[4+i];//6BYTE电表表号
+		Redata[i] = ESAMRand1[i]; 
+	}
+	for(i=0;i<8;i++)
+	{
+		Redata[i+8] = ESAMEncData1[i]; 
 	}
 	
-//	Mem_Reverse(Dbad, 6, DBADD);
-	
-ReadRand1();
-
-//	if(GetDBInfo(Dbad)== 0)
-//	{
-//		RZSB[4] = NORETURN;
-//		for(i=0;i<5;i++)
-//		{
-//		RZSB[5] += RZSB[i];//CS
-//		}
-//		USART3send(RZSB,7);
-//	}
-//	else
-//	{
-		if(ReadEncData1_Private(Dbad) == 1)		
-		{
-			for(i=0;i<8;i++)
-			{
-				ESAM_Data_Send_Back[5+i] = ESAMRand1[7-i];
-			}
-			for(i=0;i<8;i++)
-			{
-				ESAM_Data_Send_Back[5+i+8] = ESAMEncData1[7-i];
-			}
-			
-			for(i=0;i<21;i++)//CS
-			{
-				ESAM_Data_Send_Back[21] += ESAM_Data_Send_Back[i];
-			}
-			
-			USART3send(ESAM_Data_Send_Back,0x17);
-		}
-		else
-		{
-			RZSB[4] = VERIFICAFAIL;
-			for(i=0;i<5;i++)
-			{
-			RZSB[5] += RZSB[i];//CS
-			}
-			USART3send(RZSB,7);
-		}
-//	}
-	PWR_ESAM_OFF();
 }
+
+
+

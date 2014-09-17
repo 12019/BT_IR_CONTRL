@@ -24,7 +24,7 @@ u8 DoVerifica(u8 *DbAddr); 	//进行电表的认证
 void ReadESAMID(void);
 u8 ReadESAMSta(void);
 u32 ReadCounter(void);
-void Get_ESAM_Data(void);
+void Get_ESAM_Data(u8 *DbAddr, u8 *Redata);
 void IrDASend(u8 *buffer,u16 len);
 
 #endif

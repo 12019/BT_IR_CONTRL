@@ -578,8 +578,8 @@ void TIM_Configuration(void)
 	TIM3 Configuration: Output Compare Inactive Mode:
 	TIM3CLK = 24 MHz, Prescaler = 23999, TIM3 counter clock = 1 KHz
 	--------------------------------------------------------------- */ 	
-	/* Time base configuration */ //1ms 
-	TIM_TimeBaseStructure.TIM_Period = 1;
+	/* Time base configuration */ //10ms 
+	TIM_TimeBaseStructure.TIM_Period = 19;
 	TIM_TimeBaseStructure.TIM_Prescaler = 11999;//23999 max=65535
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;//0
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -801,6 +801,7 @@ void Set_ESAM_power_ON(void)
 	ISO7816_Enable();
 	PWR_ESAM_ON();	
 	POW_ESAM = 0;
+	ESAM_Reset();
 }
 void Set_ESAM_power_OFF(void)
 {

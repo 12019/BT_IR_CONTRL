@@ -34,6 +34,13 @@
 #define		MAXOFRXQ	0x200
 #define		MAXBUFFER	0x200
 
+#define		SYSISREADY 0x01
+#define		SYSNOTREADY 0x00
+
+#define		LEDSTA_BTLINKOFF 0x00
+#define		LEDSTA_BTLINKON 0x01
+#define		LEDSTA_BATLOW 0x02
+
 
 #define		VBAT_MAX	0x930
 #define		VBAT_MIN	0x800
@@ -41,6 +48,7 @@
 
 #define 	MAXTIMEWAITBTLINK 		0x05		//MIN
 #define 	MAXTIMEBTLINKEDNODATA 0x05		//MIN
+#define 	MAXTIMEBATLOW					0x02		//MIN
 
 #define NOPARITY            USART_Parity_No 
 #define EVENPARITY          USART_Parity_Even
@@ -133,17 +141,19 @@ typedef struct
 	unsigned char IrDAisconfed;
 	unsigned char RS485isconfed;
 	unsigned char SleepTime;
+	unsigned char SleepTime_BatLow;
 	unsigned char OutTime_IRDA;
 	unsigned char OutTime_RS485;
+	unsigned char Sys_ready;
 }Sys_Confed;
 
 typedef struct 
 {
 	unsigned int Sleep_run_Time;
+	unsigned int Sleep_run_Time_BatLow;
 	unsigned int Out_run_Time_IRDA;
 	unsigned int Out_run_Time_RS485;
 }Sys_Runed;
-
 
 typedef struct 
 {
@@ -171,7 +181,7 @@ typedef struct
 	unsigned char Port;
 	unsigned char OutTime_Thisport;
 	unsigned char TranLen;
-	unsigned char TranDate[0xff];
+	unsigned char TranDat[0xff];
 }AFN1d_buf_t;
 typedef struct 
 {
@@ -186,14 +196,17 @@ typedef struct
 }AFN2d_buf_t;
 typedef struct 
 {
+	unsigned char ReRZ;
 	unsigned char Port;
 	unsigned char ReqRealLen;
-	unsigned char ReqRealData[0xff];
+	unsigned char ReqRealDat[0xff];
 }AFN2u_buf_t;
 
 typedef struct 
 {
 	unsigned char Port;
+	unsigned char NeedRZ;
+	unsigned char OutTime_IRDA;
 	unsigned char DBAddr[6];
 	unsigned char TransLen;
 	unsigned char TransData[0xff];
@@ -263,27 +276,10 @@ EXT_ Sys_Confed Sys_config;
 EXT_ Sys_Runed Sys_run;
 EXT_ Frame_ut ReturnFeame;
 
-EXT_ u8 BL_STA;//1未连接 2已连接 3电量低
-EXT_ u8 LED_STA;//LED状态保存
+EXT_ u8 BAT_Low_FLAG;
 
-EXT_ u8 timed;
-EXT_ u8 sysread;
 
-EXT_ u32 time_sleep;
-EXT_ u16 BL_TIME;
-EXT_ u16 POW_TIME; 		
-EXT_ u16 M_Time;
 
-EXT_ u8 GET_ESAM;
-
-EXT_ u8 Bat_Low;
-EXT_ u8 Bat_FLAG;
-EXT_ u8 W_Mode;
-EXT_ u8 W_BaudRate;
-EXT_ u8 W_Parity;
-EXT_ u8 W_Time;
-EXT_ u8 W_Code[4];
-EXT_ u16 W_Bat;
 EXT_ u32 RZ_Counter;
 
 EXT_ u8 BYTE;
@@ -374,6 +370,7 @@ void Req_BL(void);
 void BT_Analysis(void);
 void Time_Comp(void);
 
+
 void BL_Unpack(u8 *Buffer, u16 Length);
 void ESAM_Info(void);
 /*******模拟串口功能函数区*************/
@@ -409,7 +406,8 @@ void WriteFLAG(void);
 u8 FlashWrite(u32 Data);
 u8 LoadFlash(void);
 void BTSet(void);
-
+void BTSetName(u8 *Name);
+	
 void myADC_init(void);
 u16 ADC_filter(void);
 #endif

@@ -199,7 +199,7 @@ void SysTick_Handler(void)
 	if(RX_FLAG)
 	{
 		CountRX++;
-		if((CountRX == (IR_BaudRate_Time/2))&&(Receive_bit == 0))
+		if((CountRX == (IR_BaudRate_Time>>1))&&(Receive_bit == 0))
 		{
 			if(GPIOA->IDR&(1<<5)) 
 			{
@@ -215,7 +215,7 @@ void SysTick_Handler(void)
 				Rx_Parity = 0;
 			}
 		}			
-		else if((CountRX == IR_BaudRate_Time)&&(Receive_bit > 0)&&(Receive_bit < 9))//8位数据
+		else if((CountRX == (IR_BaudRate_Time))&&(Receive_bit > 0)&&(Receive_bit < 9))//8位数据
 		{
 			tmp_data >>= 1;		
 			if(GPIOA->IDR&(1<<5)) 
@@ -226,13 +226,13 @@ void SysTick_Handler(void)
 			CountRX = 0;
 			Receive_bit++;
 		}
-		else if((CountRX == IR_BaudRate_Time)&&(Receive_bit == 9))//效验位
+		else if((CountRX == (IR_BaudRate_Time))&&(Receive_bit == 9))//效验位
 		{
 			Rx_Parity_tmp = GPIOA->IDR&(1<<5);
 			CountRX = 0;
 			Receive_bit++;
 		}
-		else if((CountRX == IR_BaudRate_Time)&&(Receive_bit == 10))//停止位
+		else if((CountRX == ((IR_BaudRate_Time>>1)+5))&&(Receive_bit == 10))//停止位
 		{
 			if(GPIOA->IDR&(1<<5)) 
 			{
@@ -267,18 +267,18 @@ void USART1_IRQHandler(void)//485
 { 
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
-			InsertQue(&RS485RxQUE, USART_ReceiveData(USART1));
+		InsertQue(&RS485RxQUE, USART_ReceiveData(USART1));
 	}
 	
 	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
 	{	
 		/* Write one byte to the transmit data register */
-				USART_SendData(USART1, TxBuffer1[TxCounter1++]); 
-				if(TxCounter1 >= MaxNbrofTx1)
-				{				
-					/* Disable the USART1 Transmit interrupt */
-					USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
-				}
+		USART_SendData(USART1, TxBuffer1[TxCounter1++]); 
+		if(TxCounter1 >= MaxNbrofTx1)
+		{				
+			/* Disable the USART1 Transmit interrupt */
+			USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
+		}
 	}
 	
 }
@@ -300,12 +300,12 @@ void USART2_IRQHandler(void)//ESAM 协议支持
 	if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET)
 	{   
 		/* Write one byte to the transmit data register */
-				USART_SendData(USART2, TxBuffer2[TxCounter2++]); 
-				if(TxCounter2 >= MaxNbrofTx2)
-				{				
-					/* Disable the USART1 Transmit interrupt */
-					USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
-				}
+		USART_SendData(USART2, TxBuffer2[TxCounter2++]); 
+		if(TxCounter2 >= MaxNbrofTx2)
+		{				
+			/* Disable the USART1 Transmit interrupt */
+			USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
+		}
 	}
 }
 
@@ -340,19 +340,19 @@ void TIM3_IRQHandler(void)//帧数据结束计时器
 		/* Clear TIM3 Update interrupt pending bit*/
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
-		if(BT_STA == 0)//BL未连接
+		if((BT_STA == LEDSTA_BTLINKOFF)&&(BAT_Low_FLAG != 1))//BL未连接 电池电量不低
 		{
 			BT_BlinkT++;
-			if(BT_BlinkT == 200)
+			if(BT_BlinkT == 20)
 			{
 				BT_BlinkT = 0;
 				RUN_TOG();
 			}
 		}
-		else if(BT_STA == 1)//BL已连接
+		else if((BT_STA == LEDSTA_BTLINKON)&&(BAT_Low_FLAG != 1))//BL已连接 电池电量不低
 		{
 			BT_BlinkT++;
-			if(BT_BlinkT == 1000)
+			if(BT_BlinkT == 100)
 			{
 				BT_BlinkT = 0;
 				RUN_TOG();
@@ -361,6 +361,10 @@ void TIM3_IRQHandler(void)//帧数据结束计时器
 		Sys_run.Out_run_Time_IRDA++;
 		Sys_run.Out_run_Time_RS485++;
 		Sys_run.Sleep_run_Time++;
+		if(BAT_Low_FLAG)
+		{
+			Sys_run.Sleep_run_Time_BatLow++;
+		}
 	}
 }
 
