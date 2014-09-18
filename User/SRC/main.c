@@ -39,6 +39,7 @@ int main(void)
 	Sys_run.Out_run_Time_RS485 = 0;
 	Sys_run.Sleep_run_Time = 0;
 	Sys_run.Sleep_run_Time_BatLow = 0;
+	Sys_run.Check_Bat_Time = 0;
 	TIM_Configuration();
 	/* NVIC configuration */
 	NVIC_Configuration(); 		
@@ -46,6 +47,7 @@ int main(void)
   SysTick_Configuration();
 	/*ADC configuration*/
 	myADC_init();	
+	
 	BTSet();
 
 /*****************************************************/	
@@ -77,7 +79,6 @@ int main(void)
 		
 		BT_Analysis();
 		Time_Comp();
-		ADC_filter();
 		if(LED2_0)//¶Ï¿ª·þÎñ
 		{
 			NVIC_SystemReset();

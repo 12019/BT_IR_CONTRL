@@ -49,6 +49,7 @@
 #define 	MAXTIMEWAITBTLINK 		0x05		//MIN
 #define 	MAXTIMEBTLINKEDNODATA 0x05		//MIN
 #define 	MAXTIMEBATLOW					0x02		//MIN
+#define 	CHECKBATISLOW					0x01		//1MIN
 
 #define NOPARITY            USART_Parity_No 
 #define EVENPARITY          USART_Parity_Even
@@ -153,6 +154,7 @@ typedef struct
 	unsigned int Sleep_run_Time_BatLow;
 	unsigned int Out_run_Time_IRDA;
 	unsigned int Out_run_Time_RS485;
+	unsigned int Check_Bat_Time;
 }Sys_Runed;
 
 typedef struct 

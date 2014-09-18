@@ -232,7 +232,7 @@ void SysTick_Handler(void)
 			CountRX = 0;
 			Receive_bit++;
 		}
-		else if((CountRX == ((IR_BaudRate_Time>>1)+5))&&(Receive_bit == 10))//停止位
+		else if((CountRX == ((IR_BaudRate_Time>>1)+15))&&(Receive_bit == 10))//停止位
 		{
 			if(GPIOA->IDR&(1<<5)) 
 			{
@@ -333,7 +333,7 @@ void USART3_IRQHandler(void)//蓝牙通道
 	}
 }
 
-void TIM3_IRQHandler(void)//帧数据结束计时器
+void TIM3_IRQHandler(void)
 {
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
 	{
@@ -361,6 +361,7 @@ void TIM3_IRQHandler(void)//帧数据结束计时器
 		Sys_run.Out_run_Time_IRDA++;
 		Sys_run.Out_run_Time_RS485++;
 		Sys_run.Sleep_run_Time++;
+		Sys_run.Check_Bat_Time++;
 		if(BAT_Low_FLAG)
 		{
 			Sys_run.Sleep_run_Time_BatLow++;

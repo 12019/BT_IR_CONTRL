@@ -114,6 +114,11 @@ u8 CheckHE(void)
 		}		
 		Clear_RxBuffer3();
 	}
+	else														//数据帧不正确
+	{
+		Clear_RxBuffer3();		
+		return 0;
+	}
 	return Re;
 }
 
@@ -275,7 +280,6 @@ void AF1_Lib_Proc(void)
 	switch(Dat_dbuf.AFN1dbuf.Port)
 	{
 		case BTPORT:
-			//配置蓝牙模块名称，暂时未实现
 			BTSetName(Dat_dbuf.AFN1dbuf.TranDat);
 			break;
 		case IRDAPORT: 
@@ -302,7 +306,7 @@ void AF1_Lib_Proc(void)
 				Sys_config.OutTime_RS485 = Dat_dbuf.AFN1dbuf.OutTime_Thisport;
 				InitQue(&RS485RxQUE);
 				USART1send(Dat_dbuf.AFN1dbuf.TranDat, Dat_dbuf.AFN1dbuf.TranLen);
-				Sys_run.Out_run_Time_RS485 = 0;
+				Sys_run.Out_run_Time_RS485 = 0;					
 			}
 			else
 			{
@@ -391,7 +395,7 @@ void AF2_Lib_Proc(void)
 	}		
 	ReturnFeame.head = FRMAEHEAD;
 	ReturnFeame.len = ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen+3;
-	if(ReturnFeame.Data_uBuf.AFN2ubuf.ReRZ != 0)
+	if((ReturnFeame.Data_uBuf.AFN2ubuf.ReRZ != 0)&&(Dat_dbuf.AFN2dbuf.Port == IRDAREPORT))
 	{
 		ReturnFeame.contrl = 0x80|((ReturnFeame.Data_uBuf.AFN2ubuf.ReRZ)<<1);	
 		ReturnFeame.Data_uBuf.AFN2ubuf.ReRZ = 0;	
@@ -476,13 +480,18 @@ void Time_Comp(void)
 	{
 		PowerDown();
 	}
-	if(Sys_run.Out_run_Time_IRDA >(Sys_config.OutTime_IRDA*100))
+	if((Sys_run.Out_run_Time_IRDA >(Sys_config.OutTime_IRDA*100))&&(Ver_flag != 1))
 	{
 		Set_IRDA_power_OFF();
 	}
 	if(Sys_run.Out_run_Time_RS485 >(Sys_config.OutTime_RS485*100))
 	{
 		Set_RS485_power_OFF();
+	}
+	if(Sys_run.Check_Bat_Time > CHECKBATISLOW*60*100)
+	{
+		Sys_run.Check_Bat_Time = 0;
+		ADC_filter();
 	}
 }
 
@@ -581,7 +590,7 @@ void Clear_RxBuffer3(void)
 
 void ESAM_Info(void)
 {
-	ESAM_Reset();//ESAM复位
+	Set_ESAM_power_ON();//ESAM复位
 	
 	RZ_Counter = ReadCounter();
 	
@@ -610,7 +619,7 @@ void Wait_BTlink(void)
 {
 	u16 timeout1 =0;
 	
-	while((LED2_0)&&(timeout1++ < MAXTIMEWAITBTLINK*600))//等待配对时间 约10min
+	while((LED2_0)&&(timeout1++ < MAXTIMEWAITBTLINK*600))//等待配对时间 约5min
 	{
 		IWDG_ReloadCounter();
 		delay_nms(100);
@@ -628,7 +637,7 @@ void Wait_BTlink(void)
 
 void BTSetName(u8 *Name)
 {
-	char tempbuf[30];
+	char tempbuf[]={"AT+NAME=BOOST00000000\r\n"};
 	u8 timeout = 0;
 	
 	sprintf(tempbuf,"AT+NAME=BOOST%x%x%x%x%x%x%x%x\r\n",

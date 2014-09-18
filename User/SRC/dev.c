@@ -243,10 +243,10 @@ void GPIO_Configuration(void)
 	GPIO_SetBits(GPIOA,GPIO_Pin_11);//关485电源
 	
 	/*Configuration PA1 (TIM2 channel 2) as alternate function push-pull */ //PA1 PWM 输出
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 	
 	/*Configuration PB14(PWR_BL) PB13(PWR_IR) PB12(PWR_ESAM) as alternate push-pull */
 	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14;
@@ -511,30 +511,39 @@ void SetUartState(u8 COM, u32 BaudRate,u16 Parity)
 * Return         : None
 *******************************************************************************/
 void USART1send(u8 *buffer,u16 len)
+{
+	if(len > 0)
 	{
-	TxCounter1 = 0;
-	MaxNbrofTx1 = len;
-	TxBuffer1 = buffer;
-	USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
-	while(TxCounter1 != MaxNbrofTx1);
-	}
+		TxCounter1 = 0;
+		MaxNbrofTx1 = len;
+		TxBuffer1 = buffer;
+		USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+		while(TxCounter1 != MaxNbrofTx1);			
+	}	
+}
 void USART2send(u8 *buffer,u16 len)
+{
+	if(len > 0)
 	{
-	TxCounter2 = 0;
-	MaxNbrofTx2 = len;
-	TxBuffer2 = buffer;
-	USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
-	while(TxCounter2 != MaxNbrofTx2);
-	}
+		TxCounter2 = 0;
+		MaxNbrofTx2 = len;
+		TxBuffer2 = buffer;
+		USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+		while(TxCounter2 != MaxNbrofTx2);
+	}	
+}
 	
 void USART3send(u8 *buffer,u16 len)
-	{
-	TxCounter3 = 0;
-	MaxNbrofTx3 = len;
-	TxBuffer3 = buffer;
-	USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
-	while(TxCounter3 < MaxNbrofTx3);
-	}
+{
+	if(len > 0)
+	{		
+		TxCounter3 = 0;
+		MaxNbrofTx3 = len;
+		TxBuffer3 = buffer;
+		USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
+		while(TxCounter3 < MaxNbrofTx3);
+	}	
+}
 	
 	
 /*******************************************************************************
