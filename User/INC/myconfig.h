@@ -117,13 +117,13 @@
 
 
 
+#pragma  anon_unions
 
 typedef struct	
 {   
 	u8 elem[MAXOFRXQ];   
 	u16 head,tail;   
 }Quque;
-
 
 
 typedef struct
@@ -136,6 +136,19 @@ typedef struct
   unsigned char min;
   unsigned char sec;
 }Time_Def;
+
+typedef struct
+{
+	unsigned char batperl;
+  unsigned char batperh;
+}LeftBat;
+
+typedef struct
+{
+	unsigned char Xver;
+  unsigned char Sver;
+	Time_Def CompilTime;
+}Version;
 
 typedef struct 
 {
@@ -157,92 +170,135 @@ typedef struct
 	unsigned int Check_Bat_Time;
 }Sys_Runed;
 
-typedef struct 
-{
-	unsigned char LPW:1;
-	unsigned char VERB:3; 
-	unsigned char NONE:3;
-	unsigned char DIR:1;
-}contrl_byte_t;
 
 typedef struct 
 {
 	unsigned char Port;
 	unsigned char BaudRate;
 	unsigned char Parity;
-	unsigned char SleepTime;
-}AFN0d_buf_t;
-typedef struct 
-{
-	unsigned char Port;
-	unsigned char End_rep;
-}AFN0u_buf_t;
+	unsigned char SysSleepTime;
+}AFN1d_F0_t;
 
 typedef struct 
 {
-	unsigned char Port;
 	unsigned char OutTime_Thisport;
-	unsigned char TranLen;
-	unsigned char TranDat[0xff];
-}AFN1d_buf_t;
+	unsigned char TransLen;
+	unsigned char TransData[0xff];
+}AFN1d_F12_t;
 typedef struct 
 {
-	unsigned char Port;
-	unsigned char TranRep;
-}AFN1u_buf_t;
+	unsigned char OutTime_Thisport;
+	unsigned char TransLen;
+	unsigned char TransData[0xff];
+}AFN1d_F2_t;
 
 typedef struct 
 {
-	unsigned char Port;
-	unsigned char ReqLen;
-}AFN2d_buf_t;
-typedef struct 
-{
-	unsigned char ReRZ;
-	unsigned char Port;
-	unsigned char ReqRealLen;
-	unsigned char ReqRealDat[0xff];
-}AFN2u_buf_t;
+	unsigned char DBAddr[6];
+}AFN1d_F3_t;
 
 typedef struct 
 {
-	unsigned char Port;
-	unsigned char NeedRZ;
-	unsigned char OutTime_IRDA;
+	unsigned char OutTime_Thisport;
 	unsigned char DBAddr[6];
 	unsigned char TransLen;
 	unsigned char TransData[0xff];
-}AFN3d_buf_t;
-
+}AFN1d_F4_t;
 
 typedef struct 
 {
-	unsigned char Dataisready;
+	unsigned char DBAddr[6];
+}AFN1d_F5_t;
+
+#pragma pack(push,1)
+typedef struct 
+{
+	union
+	{
+		AFN1d_F0_t afn1_f0;
+		AFN1d_F12_t afn1_f12;
+		AFN1d_F3_t afn1_f3;
+		AFN1d_F4_t afn1_f4;
+		AFN1d_F5_t afn1_f5;
+	};
+}AFN1d_t;
+typedef struct 
+{
+	unsigned char ReadLen;	
+}AFN2d_t;
+typedef struct 
+{
+	unsigned char Length;
 	unsigned char Contrl;
 	unsigned char AFN;
-	AFN0d_buf_t AFN0dbuf;
-	AFN1d_buf_t AFN1dbuf;
-	AFN2d_buf_t AFN2dbuf;
-	AFN3d_buf_t AFN3dbuf;
-}Data_dbuf_t;
+	unsigned char WriteFN;
+	unsigned char ReadFN;	
+	union
+	{
+		AFN1d_t AFN1D;
+		AFN2d_t AFN2D;
+	};	
+}DataDown;
+#pragma pack(pop)
+
+typedef struct 
+{
+	unsigned char flag;
+	LeftBat leftbat;
+	Version ver; 
+}AFN2u_F0_t;
+
+typedef struct 
+{
+	unsigned char SendData[0xff];
+}AFN2u_F1_t;
+
+typedef struct 
+{
+	unsigned char SendData[0xff];
+}AFN2u_F2_t;
+
+typedef struct 
+{
+	unsigned char SendRand1[0x08];
+	unsigned char SendEncD1[0x08];
+}AFN2u_F3_t;
 
 typedef struct 
 {
 	unsigned char AFN;
-	AFN0u_buf_t AFN0ubuf;
-	AFN1u_buf_t AFN1ubuf;
-	AFN2u_buf_t AFN2ubuf;
-}Data_ubuf_t;
-
-
+	unsigned char sta;
+	unsigned char SendData[0xff];
+}AFN2u_F4_t;
 
 typedef struct 
 {
-	unsigned char head;
+	unsigned char SendStas;	
+}AFN2u_F5_t;
+
+#pragma pack(push,1)
+typedef struct 
+{
+	unsigned char AFN;
+	unsigned char Fn;
+	unsigned char SendLen;
+	union
+	{
+		AFN2u_F0_t afn2_f0;
+		AFN2u_F1_t afn2_f1;
+		AFN2u_F2_t afn2_f2;
+		AFN2u_F3_t afn2_f3;
+		AFN2u_F4_t afn2_f4;
+		AFN2u_F5_t afn2_f5;
+	};	
+}AFN2u_t;
+#pragma pack(pop)
+
+typedef struct 
+{
 	unsigned char len;
 	unsigned char contrl;
-	Data_ubuf_t Data_uBuf;
-	unsigned char End;
+	AFN2u_t Data_uBuf;
 }Frame_ut;
 
 #ifdef  root
@@ -273,7 +329,7 @@ EXT_ u16 MaxNbrofTx1;
 EXT_ u16 MaxNbrofTx2;
 EXT_ u16 MaxNbrofTx3;
 
-EXT_ Data_dbuf_t Dat_dbuf;
+EXT_ DataDown Dat_dbuf;
 EXT_ Sys_Confed Sys_config;
 EXT_ Sys_Runed Sys_run;
 EXT_ Frame_ut ReturnFeame;

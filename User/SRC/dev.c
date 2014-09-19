@@ -303,7 +303,7 @@ void USART_Configuration(void)
 	    - Receive and transmit enabled
 	*/
 	/* Configure USART1 */
-	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_BaudRate = 1200;
 	USART_InitStructure.USART_WordLength = USART_WordLength_9b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_Even;
@@ -778,6 +778,7 @@ void GetBuildTime(void)
 	BuildTime.min = Hex2Bcd((unsigned char)min);
 	BuildTime.sec = Hex2Bcd((unsigned char)sec);
 }
+
 void Set_IRDA_power_ON(void)
 {
 	IR_GPIO_Init();

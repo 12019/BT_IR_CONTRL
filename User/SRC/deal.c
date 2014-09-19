@@ -24,6 +24,15 @@
 #define	WAERVER		 	0x06
 #define	RZCONTER	 	0x07
 
+#define FN0 00	//系统本身
+#define FN1 01	//Irda通道
+#define FN2 02	//RS485通道
+#define FN3 03	//获取ESAM随机数及密文
+#define FN4 04	//认证后抄表
+#define FN5 05	//认证测试
+#define FN6 06	//IAP升级
+
+
 volatile FLASH_Status FLASHStatus;
 
 void do_contrl_pro(void)
@@ -32,10 +41,6 @@ void do_contrl_pro(void)
 	{
 		PowerDown();
 	}
-//	if((Dat_dbuf.Contrl&0x80) == 0x80)
-//	{
-//		
-//	}
 }
 /*************数据头尾及校验*****************/
 u8 CheckHE(void)
@@ -66,46 +71,65 @@ u8 CheckHE(void)
 			switch(Dat_dbuf.AFN)
 			{
 				case AFN0:
-					Dat_dbuf.AFN0dbuf.Port = RxBuffer3[i+4];
-					Dat_dbuf.AFN0dbuf.BaudRate = RxBuffer3[i+5];
-					Dat_dbuf.AFN0dbuf.Parity = RxBuffer3[i+6];
-					Dat_dbuf.AFN0dbuf.SleepTime = RxBuffer3[i+7];
 					break;
 				case AFN1:
-					Dat_dbuf.AFN1dbuf.Port = RxBuffer3[i+4];
-					Dat_dbuf.AFN1dbuf.OutTime_Thisport = RxBuffer3[i+5];
-					Dat_dbuf.AFN1dbuf.TranLen= RxBuffer3[i+6];
-					for(j=i+7;j<templen-2;j++)
+					Dat_dbuf.WriteFN = RxBuffer3[i+4];
+					switch(Dat_dbuf.WriteFN)
 					{
-						Dat_dbuf.AFN1dbuf.TranDat[j-i-7] = RxBuffer3[j];				
-					}
+						case FN0:
+							Dat_dbuf.AFN1D.afn1_f0.Port = RxBuffer3[i+5];
+							Dat_dbuf.AFN1D.afn1_f0.BaudRate = RxBuffer3[i+6];
+							Dat_dbuf.AFN1D.afn1_f0.Parity = RxBuffer3[i+7];
+							Dat_dbuf.AFN1D.afn1_f0.SysSleepTime = RxBuffer3[i+8];						
+							break;
+						case FN1:
+						case FN2:
+							Dat_dbuf.AFN1D.afn1_f12.OutTime_Thisport = RxBuffer3[i+5];
+							Dat_dbuf.AFN1D.afn1_f12.TransLen = RxBuffer3[i+6];
+							for(j=0;j<Dat_dbuf.AFN1D.afn1_f12.TransLen;j++)
+							{
+								Dat_dbuf.AFN1D.afn1_f12.TransData[j] = RxBuffer3[i+7+j];
+							}
+							break;
+						case FN3:
+							for(j=0;j<6;j++)
+							{
+								Dat_dbuf.AFN1D.afn1_f3.DBAddr[j] = RxBuffer3[i+5+j];
+							}
+							break;
+						case FN4:
+							Dat_dbuf.AFN1D.afn1_f4.OutTime_Thisport = RxBuffer3[i+5];
+							for(j=0;j<6;j++)
+							{
+								Dat_dbuf.AFN1D.afn1_f4.DBAddr[j] = RxBuffer3[i+6+j];
+							}
+							Dat_dbuf.AFN1D.afn1_f4.TransLen = RxBuffer3[i+12];
+							for(j=0;j<Dat_dbuf.AFN1D.afn1_f4.TransLen;j++)
+							{
+								Dat_dbuf.AFN1D.afn1_f4.TransData[j] = RxBuffer3[i+13+j];
+							}
+							break;
+						case FN5:
+							for(j=0;j<6;j++)
+							{
+								Dat_dbuf.AFN1D.afn1_f5.DBAddr[j] = RxBuffer3[i+5+j];
+							}
+							break;
+						case FN6:
+							break;
+						default:
+							break;
+				}
 					break;
 				case AFN2:
-					Dat_dbuf.AFN2dbuf.Port = RxBuffer3[i+4];
-					Dat_dbuf.AFN2dbuf.ReqLen = RxBuffer3[i+5];
-					if(Dat_dbuf.AFN2dbuf.ReqLen > MAXREPALY)
-					{
-						Dat_dbuf.AFN2dbuf.ReqLen = MAXREPALY;
-					}
+					Dat_dbuf.ReadFN = RxBuffer3[i+4];
+					Dat_dbuf.AFN2D.ReadLen = RxBuffer3[i+5];
 					break;
 				case AFN3:
-					Dat_dbuf.AFN3dbuf.Port = RxBuffer3[i+4];
-					Dat_dbuf.AFN3dbuf.NeedRZ = RxBuffer3[i+5];
-					Dat_dbuf.AFN3dbuf.OutTime_IRDA = RxBuffer3[i+6];
-					for(j=0;j<6;j++)
-					{
-						Dat_dbuf.AFN3dbuf.DBAddr[j] = RxBuffer3[i+7+j];
-					}
-					Dat_dbuf.AFN3dbuf.TransLen = RxBuffer3[i+13];
-					for(j=0;j<Dat_dbuf.AFN3dbuf.TransLen;j++)
-					{
-						Dat_dbuf.AFN3dbuf.TransData[j] = RxBuffer3[i+14+j];
-					}
 					break;
 				default:
 					break;
 			}
-			Dat_dbuf.Dataisready = 1;
 			Re = 1;
 		}
 		else
@@ -140,71 +164,94 @@ void Return_BT(void)
 	u8 tempdata[0xff];
 	u8 i;
 	switch(ReturnFeame.Data_uBuf.AFN)
-	{		
-		case AFN0:			
+	{
+		case AFN0:
 			tempdata[0] = FRMAEHEAD;
-			tempdata[1] = ReturnFeame.len+5;
-			tempdata[2] = ReturnFeame.contrl;
+			tempdata[1] = 8;
+			tempdata[2] = ReturnFeame.contrl;		
 			tempdata[3] = ReturnFeame.Data_uBuf.AFN;
-			tempdata[4] = ReturnFeame.Data_uBuf.AFN0ubuf.Port;
-			tempdata[5] = ReturnFeame.Data_uBuf.AFN0ubuf.End_rep;
+			tempdata[4] = ReturnFeame.Data_uBuf.Fn;
+			tempdata[5] = ReturnFeame.Data_uBuf.afn2_f4.sta;
 			tempdata[6] = 0;
-			for(i=0;i<6;i++)
-			{
-				tempdata[6] += tempdata[i];
-			}
+			tempdata[6] = CheckSum(tempdata,ReturnFeame.len+3);
 			tempdata[7] = FRMAEEND;
-			USART3send(tempdata,8);
-			break;
-		case AFN1:
-			tempdata[0] = FRMAEHEAD;
-			tempdata[1] = ReturnFeame.len+5;
-			tempdata[2] = ReturnFeame.contrl;
-			tempdata[3] = ReturnFeame.Data_uBuf.AFN;
-			tempdata[4] = ReturnFeame.Data_uBuf.AFN1ubuf.Port;
-			tempdata[5] = ReturnFeame.Data_uBuf.AFN1ubuf.TranRep;
-			tempdata[6] = 0;
-			for(i=0;i<6;i++)
-			{
-				tempdata[6] += tempdata[i];
-			}
-			tempdata[7] = FRMAEEND;
-			USART3send(tempdata,8);
-			break;
+			USART3send(tempdata,8);	
+			break;		
 		case AFN2:
 			tempdata[0] = FRMAEHEAD;
 			tempdata[1] = ReturnFeame.len+5;
-			tempdata[2] = ReturnFeame.contrl;
+			tempdata[2] = ReturnFeame.contrl;	
 			tempdata[3] = ReturnFeame.Data_uBuf.AFN;
-			tempdata[4] = ReturnFeame.Data_uBuf.AFN2ubuf.Port;
-			tempdata[5] = ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen;
-			for(i=0;i<ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen;i++)
+			tempdata[4] = ReturnFeame.Data_uBuf.Fn;
+			tempdata[5] = ReturnFeame.Data_uBuf.SendLen;
+			switch(Dat_dbuf.WriteFN)
 			{
-				tempdata[6+i] = ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[i];
+				case FN0:
+					tempdata[6] = ReturnFeame.Data_uBuf.afn2_f0.flag;
+					tempdata[7] = ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperl;
+					tempdata[8] = ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperh;
+					tempdata[9] = ReturnFeame.Data_uBuf.afn2_f0.ver.Xver;
+					tempdata[10] = ReturnFeame.Data_uBuf.afn2_f0.ver.Sver;
+					tempdata[11] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.yearh;
+					tempdata[12] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.yearl;
+					tempdata[13] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.mon;
+					tempdata[14] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.date;
+					tempdata[15] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.hour;
+					tempdata[16] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.min;
+					tempdata[17] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.sec;
+					break;
+				case FN1:
+					for(i=0;i<ReturnFeame.Data_uBuf.SendLen;i++)
+					{
+						tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f1.SendData[i];						
+					}
+				case FN2:
+					for(i=0;i<ReturnFeame.Data_uBuf.SendLen;i++)
+					{
+						tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f2.SendData[i];						
+					}
+					break;
+				case FN3:
+					for(i=0;i<8;i++)
+					{
+						tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f3.SendRand1[i];						
+					}
+					for(i=0;i<8;i++)
+					{
+						tempdata[14+i] = ReturnFeame.Data_uBuf.afn2_f3.SendEncD1[i];						
+					}						
+					break;
+				case FN4:
+					for(i=0;i<ReturnFeame.Data_uBuf.SendLen;i++)
+					{
+						tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f4.SendData[i];						
+					}					
+					break;
+				case FN5:
+					tempdata[6] = ReturnFeame.Data_uBuf.afn2_f5.SendStas;
+					break;
+				case FN6:
+					break;
+				default:
+					break;
 			}
-			tempdata[6+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen] = 0;
-			for(i=0;i<6+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen;i++)
-			{
-				tempdata[6+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen] += tempdata[i];
-			}
-			tempdata[7+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen] = FRMAEEND;
-			USART3send(tempdata,8+ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);
+			tempdata[ReturnFeame.len+3] = 0;
+			tempdata[ReturnFeame.len+3] = CheckSum(tempdata,ReturnFeame.len+3);
+			tempdata[ReturnFeame.len+4] = FRMAEEND;									
+			USART3send(tempdata,(ReturnFeame.len+5));		
 			break;
-		case AFN3:
-			
-			break;		
 		default:
 			break;
-	}
+	}	
 	ReturnFeame.Data_uBuf.AFN = 0xFF;
 }
-void AF0_Lib_Proc(void)
+void AF1_F0_Proc(void)
 {
 	u32 BaudRate;
 	u16 Parity;
-	Sys_config.SleepTime = Dat_dbuf.AFN0dbuf.SleepTime;
+	Sys_config.SleepTime = Dat_dbuf.AFN1D.afn1_f0.SysSleepTime;
 	Sys_config.Sys_ready = SYSISREADY;
-	switch(Dat_dbuf.AFN0dbuf.BaudRate)
+	switch(Dat_dbuf.AFN1D.afn1_f0.BaudRate)
 		{
 			case(0):
 			BaudRate = CBR_1200;
@@ -221,7 +268,7 @@ void AF0_Lib_Proc(void)
 			default:
 			break;		
 		}
-	switch(Dat_dbuf.AFN0dbuf.Parity)
+	switch(Dat_dbuf.AFN1D.afn1_f0.Parity)
 	{
 		case(0):
 		Parity = EVENPARITY;
@@ -235,7 +282,7 @@ void AF0_Lib_Proc(void)
 		default:
 		break;		
 	}	
-	switch(Dat_dbuf.AFN0dbuf.Port)
+	switch(Dat_dbuf.AFN1D.afn1_f0.Port)
 	{
 		case IRDAPORT:
 				switch(BaudRate)
@@ -259,62 +306,101 @@ void AF0_Lib_Proc(void)
 		default:
 			break;
 	}
-	ReturnFeame.head = FRMAEHEAD;
-	ReturnFeame.len = 0x03;
-	ReturnFeame.contrl = 0x80;
-	ReturnFeame.End = FRMAEEND;
-	ReturnFeame.Data_uBuf.AFN = Dat_dbuf.AFN;
-	ReturnFeame.Data_uBuf.AFN0ubuf.End_rep = 1;
-	ReturnFeame.Data_uBuf.AFN0ubuf.Port = Dat_dbuf.AFN0dbuf.Port;
-	
-	Return_BT();
 }
+void AF1_F1_Proc(void)
+{
+	if(Sys_config.IrDAisconfed)
+	{
+		Sys_config.OutTime_IRDA = Dat_dbuf.AFN1D.afn1_f12.OutTime_Thisport;
+		InitQue(&IrDARxQUE);
+		SendBytes(Dat_dbuf.AFN1D.afn1_f12.TransData, Dat_dbuf.AFN1D.afn1_f12.TransLen);
+		Sys_run.Out_run_Time_IRDA = 0;
+	}
+}
+void AF1_F2_Proc(void)
+{
+	if(Sys_config.RS485isconfed)
+	{
+		Sys_config.OutTime_RS485 = Dat_dbuf.AFN1D.afn1_f12.OutTime_Thisport;
+		InitQue(&RS485RxQUE);
+		USART1send(Dat_dbuf.AFN1D.afn1_f12.TransData, Dat_dbuf.AFN1D.afn1_f12.TransLen);
+		Sys_run.Out_run_Time_RS485 = 0;
+	}	
+}
+void AF1_F3_Proc(void)
+{
+	u8 RandEncData[16];
+	u8 i;
+	Set_ESAM_power_ON();
+	Get_ESAM_Data(Dat_dbuf.AFN1D.afn1_f3.DBAddr,RandEncData);
+	for(i=0;i<8;i++)
+	{
+		ReturnFeame.Data_uBuf.afn2_f3.SendRand1[i] = RandEncData[i];
+		ReturnFeame.Data_uBuf.afn2_f3.SendEncD1[i] = RandEncData[8+i];
+	}
+	Set_ESAM_power_OFF();	
+}
+void AF1_F4_Proc(void)
+{
+	u8 Re;
+	if(Sys_config.IrDAisconfed)
+	{
+		Set_ESAM_power_ON();
+		Ver_flag = 1;
+		Re = DoVerifica(Dat_dbuf.AFN1D.afn1_f4.DBAddr);
+		Ver_flag = 0;				
+		if((Dat_dbuf.AFN1D.afn1_f4.TransLen > 0)&&((Re == PRIVATESUC)||(Re == PUBLICSUC)))
+		{
+			Sys_config.OutTime_IRDA = Dat_dbuf.AFN1D.afn1_f4.OutTime_Thisport;
+			InitQue(&IrDARxQUE);
+			SendBytes(Dat_dbuf.AFN1D.afn1_f4.TransData, Dat_dbuf.AFN1D.afn1_f4.TransLen);
+			Sys_run.Out_run_Time_IRDA = 0;		
+		}	
+		else
+		{
+			ReturnFeame.Data_uBuf.afn2_f4.AFN = AFN0;
+			ReturnFeame.Data_uBuf.afn2_f4.sta = Re - 2;
+		}
+		Set_ESAM_power_OFF();		
+	}
+}
+
+void AF1_F5_Proc(void)
+{
+	u8 Re;
+	if(Sys_config.IrDAisconfed)
+	{
+		Set_ESAM_power_ON();
+		Ver_flag = 1;
+		Re = DoVerifica(Dat_dbuf.AFN1D.afn1_f4.DBAddr);
+		Ver_flag = 0;				
+		ReturnFeame.Data_uBuf.afn2_f5.SendStas = Re + 1;		
+	}
+}
+
 void AF1_Lib_Proc(void)
 {
-	ReturnFeame.head = FRMAEHEAD;
-	ReturnFeame.len = 0x03;
-	ReturnFeame.contrl = 0x80;
-	ReturnFeame.End = FRMAEEND;
-	ReturnFeame.Data_uBuf.AFN = Dat_dbuf.AFN;
-	ReturnFeame.Data_uBuf.AFN1ubuf.Port = Dat_dbuf.AFN1dbuf.Port;
-	switch(Dat_dbuf.AFN1dbuf.Port)
+	switch(Dat_dbuf.WriteFN)
 	{
-		case BTPORT:
-			BTSetName(Dat_dbuf.AFN1dbuf.TranDat);
+		case FN0:
+			AF1_F0_Proc();
 			break;
-		case IRDAPORT: 
-			if(Sys_config.IrDAisconfed)
-			{
-				ReturnFeame.Data_uBuf.AFN1ubuf.TranRep = 1;
-				Return_BT();
-				Sys_config.OutTime_IRDA = Dat_dbuf.AFN1dbuf.OutTime_Thisport;
-				InitQue(&IrDARxQUE);
-				SendBytes(Dat_dbuf.AFN1dbuf.TranDat, Dat_dbuf.AFN1dbuf.TranLen);
-				Sys_run.Out_run_Time_IRDA = 0;
-			}
-			else
-			{
-				ReturnFeame.Data_uBuf.AFN1ubuf.TranRep = 0;
-				Return_BT();
-			}
+		case FN1:
+			AF1_F1_Proc();
 			break;
-		case RS485PORT:
-			if(Sys_config.RS485isconfed)
-			{
-				ReturnFeame.Data_uBuf.AFN1ubuf.TranRep = 1;
-				Return_BT();
-				Sys_config.OutTime_RS485 = Dat_dbuf.AFN1dbuf.OutTime_Thisport;
-				InitQue(&RS485RxQUE);
-				USART1send(Dat_dbuf.AFN1dbuf.TranDat, Dat_dbuf.AFN1dbuf.TranLen);
-				Sys_run.Out_run_Time_RS485 = 0;					
-			}
-			else
-			{
-				ReturnFeame.Data_uBuf.AFN1ubuf.TranRep = 0;
-				Return_BT();
-			}
+		case FN2:
+			AF1_F2_Proc();
 			break;
-		case ESAMPORT:
+		case FN3:
+			AF1_F3_Proc();
+			break;
+		case FN4:
+			AF1_F4_Proc();
+			break;
+		case FN5:
+			AF1_F5_Proc();
+			break;
+		case FN6:
 			break;
 		default:
 			break;
@@ -323,128 +409,98 @@ void AF1_Lib_Proc(void)
 void AF2_Lib_Proc(void)
 {
 	u32 temp;
-	switch(Dat_dbuf.AFN2dbuf.Port)
+	ReturnFeame.Data_uBuf.Fn = Dat_dbuf.ReadFN;
+	ReturnFeame.Data_uBuf.AFN = Dat_dbuf.AFN;
+	if(Dat_dbuf.ReadFN == Dat_dbuf.WriteFN)
 	{
-		case IRDAPORT: 
-			if(Dat_dbuf.AFN2dbuf.ReqLen < NumOfQue(&IrDARxQUE))
-			{
-				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = Dat_dbuf.AFN2dbuf.ReqLen;
-				OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);
-			}
-			else if(Dat_dbuf.AFN2dbuf.ReqLen >= NumOfQue(&IrDARxQUE))
-			{
-				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = NumOfQue(&IrDARxQUE);
-				OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);				
-			}
-			break;
-		case RS485PORT:
-			if(Dat_dbuf.AFN2dbuf.ReqLen < NumOfQue(&RS485RxQUE))
-			{
-				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = Dat_dbuf.AFN2dbuf.ReqLen;
-				OutQue(&RS485RxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);
-			}
-			else if(Dat_dbuf.AFN2dbuf.ReqLen >= NumOfQue(&RS485RxQUE))
-			{
-				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = NumOfQue(&RS485RxQUE);
-				OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);				
-			}			
-			break;
-		case ESAMPORT:
-			break;
-		case IRDAREPORT:
-			if(Dat_dbuf.AFN2dbuf.ReqLen < NumOfQue(&IrDARxQUE))
-			{
-				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = Dat_dbuf.AFN2dbuf.ReqLen;
-				OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);
-			}
-			else if(Dat_dbuf.AFN2dbuf.ReqLen >= NumOfQue(&IrDARxQUE))
-			{
-				ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = NumOfQue(&IrDARxQUE);
-				OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat,ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen);				
-			}
-			break;
-		case LEFTPOWER:
-			temp = ADC_filter();
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = 0x02;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[0] = (u8)(temp&0xff);
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[1] = (u8)((temp&0xff00)>>8);		
-			break;
-		case WAERVER:
-			GetBuildTime();
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = 0x09;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[0] = XVER;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[1] = SVER;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[2] = BuildTime.yearh;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[3] = BuildTime.yearl;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[4] = BuildTime.mon;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[5] = BuildTime.date;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[6] = BuildTime.hour;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[7] = BuildTime.min;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[8] = BuildTime.sec;
-			break;
-		case RZCONTER:
-			ESAM_Info();
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen = 0x04;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[0] = (RZ_Counter&0xff000000)>>24;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[1] = (RZ_Counter&0xff0000)>>16;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[2] = (RZ_Counter&0xff00)>>8;
-			ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealDat[3] = RZ_Counter&0xff;
-			break;		
-		default:
-			break;
-	}		
-	ReturnFeame.head = FRMAEHEAD;
-	ReturnFeame.len = ReturnFeame.Data_uBuf.AFN2ubuf.ReqRealLen+3;
-	if((ReturnFeame.Data_uBuf.AFN2ubuf.ReRZ != 0)&&(Dat_dbuf.AFN2dbuf.Port == IRDAREPORT))
-	{
-		ReturnFeame.contrl = 0x80|((ReturnFeame.Data_uBuf.AFN2ubuf.ReRZ)<<1);	
-		ReturnFeame.Data_uBuf.AFN2ubuf.ReRZ = 0;	
+		switch(Dat_dbuf.ReadFN)
+		{
+			case FN0:
+				ReturnFeame.Data_uBuf.SendLen = 12;
+				ReturnFeame.Data_uBuf.afn2_f0.flag = 1;
+				temp = ADC_filter();
+				ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperl = (u8)(temp&0xff);
+				ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperh = (u8)((temp&0xff00)>>8);
+				GetBuildTime();
+				ReturnFeame.Data_uBuf.afn2_f0.ver.Xver = XVER;
+				ReturnFeame.Data_uBuf.afn2_f0.ver.Sver = SVER;
+				ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.yearh = BuildTime.yearh;
+				ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.yearl = BuildTime.yearl;
+				ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.mon = BuildTime.mon;
+				ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.date = BuildTime.date;
+				ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.hour = BuildTime.hour;
+				ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.min = BuildTime.min;
+				ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.sec = BuildTime.sec;			
+				break;
+			case FN1:
+				if(Dat_dbuf.AFN2D.ReadLen < NumOfQue(&IrDARxQUE))
+				{
+					ReturnFeame.Data_uBuf.SendLen = Dat_dbuf.AFN2D.ReadLen;					
+					OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.afn2_f1.SendData,ReturnFeame.Data_uBuf.SendLen);
+				}
+				else
+				{
+					ReturnFeame.Data_uBuf.SendLen = NumOfQue(&IrDARxQUE);
+					OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.afn2_f1.SendData,ReturnFeame.Data_uBuf.SendLen);
+				}
+				break;
+			case FN2:
+				if(Dat_dbuf.AFN2D.ReadLen < NumOfQue(&RS485RxQUE))
+				{
+					ReturnFeame.Data_uBuf.SendLen = Dat_dbuf.AFN2D.ReadLen;					
+					OutQue(&RS485RxQUE,ReturnFeame.Data_uBuf.afn2_f2.SendData,ReturnFeame.Data_uBuf.SendLen);
+				}
+				else
+				{
+					ReturnFeame.Data_uBuf.SendLen = NumOfQue(&RS485RxQUE);
+					OutQue(&RS485RxQUE,ReturnFeame.Data_uBuf.afn2_f2.SendData,ReturnFeame.Data_uBuf.SendLen);
+				}				
+				break;
+			case FN3:
+				ReturnFeame.Data_uBuf.SendLen = 16;
+				break;
+			case FN4:
+				if(ReturnFeame.Data_uBuf.afn2_f4.AFN != AFN0)
+				{
+					if(Dat_dbuf.AFN2D.ReadLen < NumOfQue(&IrDARxQUE))
+					{
+						ReturnFeame.Data_uBuf.SendLen = Dat_dbuf.AFN2D.ReadLen;					
+						OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.afn2_f1.SendData,ReturnFeame.Data_uBuf.SendLen);
+					}
+					else
+					{
+						ReturnFeame.Data_uBuf.SendLen = NumOfQue(&IrDARxQUE);
+						OutQue(&IrDARxQUE,ReturnFeame.Data_uBuf.afn2_f1.SendData,ReturnFeame.Data_uBuf.SendLen);
+					}
+				}
+				else
+				{
+					ReturnFeame.Data_uBuf.AFN = AFN0;
+				}
+				break;
+			case FN5:
+				ReturnFeame.Data_uBuf.SendLen = 1;
+				break;
+			case FN6:
+				break;
+			default:
+				break;
+		}
 	}
 	else
 	{
+		ReturnFeame.Data_uBuf.SendLen = 0;		
+	}
+	ReturnFeame.len = ReturnFeame.Data_uBuf.SendLen+3;
+	if((BAT_Low_FLAG != 1))
+	{
 		ReturnFeame.contrl = 0x80;
 	}
-	ReturnFeame.End = FRMAEEND;
-	ReturnFeame.Data_uBuf.AFN = Dat_dbuf.AFN;
-	ReturnFeame.Data_uBuf.AFN2ubuf.Port = Dat_dbuf.AFN2dbuf.Port;
-	
-	Return_BT();
-}
-void AF3_Lib_Proc(void)
-{
-	u8 i;
-	u8 RandEncData[16];
-	Set_ESAM_power_ON();
-	switch(Dat_dbuf.AFN3dbuf.Port)
+	else
 	{
-		case IRDAPORT: 
-			if(Dat_dbuf.AFN3dbuf.NeedRZ)
-			{
-				Ver_flag = 1;
-				ReturnFeame.Data_uBuf.AFN2ubuf.ReRZ = DoVerifica(Dat_dbuf.AFN3dbuf.DBAddr);
-				ReturnFeame.Data_uBuf.AFN2ubuf.ReRZ += 1;
-				Ver_flag = 0;				
-			}
-			if(Dat_dbuf.AFN3dbuf.TransLen > 0)
-			{
-				Sys_config.OutTime_IRDA = Dat_dbuf.AFN3dbuf.OutTime_IRDA;
-				InitQue(&IrDARxQUE);
-				SendBytes(Dat_dbuf.AFN1dbuf.TranDat, Dat_dbuf.AFN1dbuf.TranLen);
-				Sys_run.Out_run_Time_IRDA = 0;		
-			}
-			break;
-		case ESAMPORT:
-			Get_ESAM_Data(Dat_dbuf.AFN3dbuf.DBAddr,RandEncData);
-			InitQue(&IrDARxQUE);
-			for(i=0;i<16;i++)
-			{
-				InsertQue(&IrDARxQUE,RandEncData[i]);
-			}
-			break;
-		default:
-				break;
+		ReturnFeame.contrl = 0x80|(0x01<<6);	
 	}
-	Set_ESAM_power_OFF();
+	Return_BT();
 }
 void BT_Analysis(void)
 {
@@ -453,16 +509,12 @@ void BT_Analysis(void)
 		switch(Dat_dbuf.AFN)
 		{
 			case AFN0:
-				AF0_Lib_Proc();
 				break;
 			case AFN1:
 				AF1_Lib_Proc();
 				break;
 			case AFN2:
 				AF2_Lib_Proc();
-				break;
-			case AFN3:
-				AF3_Lib_Proc();
 				break;
 			default:
 				break;
