@@ -432,7 +432,14 @@ void AF2_Lib_Proc(void)
 		{
 			case FN0:
 				ReturnFeame.Data_uBuf.SendLen = 12;
-				ReturnFeame.Data_uBuf.afn2_f0.flag = 1;
+				if(Sys_config.Sys_ready == SYSISREADY)
+				{
+					ReturnFeame.Data_uBuf.afn2_f0.flag = 1;					
+				}
+				else
+				{
+					ReturnFeame.Data_uBuf.afn2_f0.flag = 0;					
+				}
 				temp = ADC_filter();
 				ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperl = (u8)(temp&0xff);
 				ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperh = (u8)((temp&0xff00)>>8);
