@@ -55,6 +55,10 @@ u8 CheckHE(void)
 	while(RxBuffer3[i] != FRMAEHEAD)
 	{
 		i++;
+		if(i>MAXBUFFER-10)
+		{
+			Clear_RxBuffer3();
+		}
 	}
 	templen = RxBuffer3[i+1];
 	if(templen+i > RxCounter3)		//数据未接收完全
@@ -86,6 +90,11 @@ u8 CheckHE(void)
 						case FN2:
 							Dat_dbuf.AFN1D.afn1_f12.OutTime_Thisport = RxBuffer3[i+5];
 							Dat_dbuf.AFN1D.afn1_f12.TransLen = RxBuffer3[i+6];
+							if(Dat_dbuf.AFN1D.afn1_f12.TransLen > templen)
+							{
+								Clear_RxBuffer3();
+								return 0;
+							}
 							for(j=0;j<Dat_dbuf.AFN1D.afn1_f12.TransLen;j++)
 							{
 								Dat_dbuf.AFN1D.afn1_f12.TransData[j] = RxBuffer3[i+7+j];
@@ -104,6 +113,11 @@ u8 CheckHE(void)
 								Dat_dbuf.AFN1D.afn1_f4.DBAddr[j] = RxBuffer3[i+6+j];
 							}
 							Dat_dbuf.AFN1D.afn1_f4.TransLen = RxBuffer3[i+12];
+							if(Dat_dbuf.AFN1D.afn1_f4.TransLen > templen)
+							{
+								Clear_RxBuffer3();
+								return 0;
+							}							
 							for(j=0;j<Dat_dbuf.AFN1D.afn1_f4.TransLen;j++)
 							{
 								Dat_dbuf.AFN1D.afn1_f4.TransData[j] = RxBuffer3[i+13+j];
@@ -321,6 +335,7 @@ void AF1_F2_Proc(void)
 {
 	if(Sys_config.RS485isconfed)
 	{
+		Set_RS485_power_ON();
 		Sys_config.OutTime_RS485 = Dat_dbuf.AFN1D.afn1_f12.OutTime_Thisport;
 		InitQue(&RS485RxQUE);
 		USART1send(Dat_dbuf.AFN1D.afn1_f12.TransData, Dat_dbuf.AFN1D.afn1_f12.TransLen);
