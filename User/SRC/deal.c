@@ -325,6 +325,8 @@ void AF1_F1_Proc(void)
 {
 	if(Sys_config.IrDAisconfed)
 	{
+//		Set_IRDA_power_ON();
+		Sys_run.Out_run_Time_IRDA = 0;
 		Sys_config.OutTime_IRDA = Dat_dbuf.AFN1D.afn1_f12.OutTime_Thisport;
 		InitQue(&IrDARxQUE);
 		SendBytes(Dat_dbuf.AFN1D.afn1_f12.TransData, Dat_dbuf.AFN1D.afn1_f12.TransLen);
@@ -336,6 +338,7 @@ void AF1_F2_Proc(void)
 	if(Sys_config.RS485isconfed)
 	{
 		Set_RS485_power_ON();
+		Sys_run.Out_run_Time_RS485 = 0;
 		Sys_config.OutTime_RS485 = Dat_dbuf.AFN1D.afn1_f12.OutTime_Thisport;
 		InitQue(&RS485RxQUE);
 		USART1send(Dat_dbuf.AFN1D.afn1_f12.TransData, Dat_dbuf.AFN1D.afn1_f12.TransLen);
@@ -627,6 +630,7 @@ void SendOneByte(u8 Byte)
 	Tx_Parity = 0;
 	BYTE = Byte;
 	while(TX_FLAG == 1);
+	EXTI9_5_ENABLE();
 	delay_nms(1);
 }
 
