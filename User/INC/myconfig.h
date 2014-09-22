@@ -50,7 +50,7 @@
 #define 	MAXTIMEBTLINKEDNODATA 0x05		//MIN
 #define 	MAXTIMEBATLOW					0x02		//MIN
 #define 	CHECKBATISLOW					0x01		//1MIN
-#define   MAXBTUARTOUT					0X05		//50ms
+#define   MAXBTUARTOUT					0x05		//100ms
 
 #define NOPARITY            USART_Parity_No 
 #define EVENPARITY          USART_Parity_Even
@@ -159,6 +159,7 @@ typedef struct
 	unsigned char SleepTime_BatLow;
 	unsigned char OutTime_IRDA;
 	unsigned char OutTime_RS485;
+	unsigned int 	OutTime_BTUART;
 	unsigned char Sys_ready;
 }Sys_Confed;
 

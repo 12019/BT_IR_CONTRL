@@ -320,7 +320,8 @@ void USART3_IRQHandler(void)//蓝牙通道
 {
 	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)//接收寄存器满中断
 	{
-		Sys_run.BTuart_Time_Enable = 1;
+//		Sys_run.BTuart_Time_Enable = 1;
+		Sys_run.BTuart_Out_Run_Time = 0;
 		if(RxCounter3 < MAXBUFFER)
 		{
 			RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);			

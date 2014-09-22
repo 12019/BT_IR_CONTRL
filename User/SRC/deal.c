@@ -60,14 +60,19 @@ u8 CheckHE(void)
 			Clear_RxBuffer3();
 		}
 	}
+	Sys_run.BTuart_Time_Enable = 1;	
+	Sys_run.BTuart_Out_Run_Time = 0;
 	templen = RxBuffer3[i+1];
 	if(templen+i > RxCounter3)		//数据未接收完全
 		return 0;
 	if(RxBuffer3[i+templen-1] == FRMAEEND)
 	{
 		tempsum = RxBuffer3[i+templen-2];
+//		Sys_config.OutTime_BTUART = tempsum-5;
 		if(tempsum == CheckSum((RxBuffer3+i),(templen-2)))
 		{
+			Sys_run.BTuart_Time_Enable = 0;		
+			Sys_run.BTuart_Out_Run_Time = 0;
 			Sys_run.Sleep_run_Time = 0;
 			Dat_dbuf.Contrl = RxBuffer3[i+2];
 			do_contrl_pro();
@@ -149,7 +154,7 @@ u8 CheckHE(void)
 		else
 		{
 			return 0;
-		}		
+		}	
 		Clear_RxBuffer3();
 	}
 	else														//数据帧不正确
@@ -570,10 +575,10 @@ void Time_Comp(void)
 		Sys_run.Check_Bat_Time = 0;
 		ADC_filter();
 	}
-	if((Sys_run.BTuart_Time_Enable == 1)&&(Sys_run.BTuart_Out_Run_Time > MAXBTUARTOUT))
+	if((Sys_run.BTuart_Time_Enable == 1)&&(Sys_run.BTuart_Out_Run_Time > MAXBTUARTOUT /*Sys_config.OutTime_BTUART*/))
 	{
-		Sys_run.BTuart_Out_Run_Time = 0;
 		Sys_run.BTuart_Time_Enable = 0;
+		Sys_run.BTuart_Out_Run_Time = 0;
 		Clear_RxBuffer3();
 	}
 }
