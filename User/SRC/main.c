@@ -40,6 +40,8 @@ int main(void)
 	Sys_run.Sleep_run_Time = 0;
 	Sys_run.Sleep_run_Time_BatLow = 0;
 	Sys_run.Check_Bat_Time = 0;
+	Sys_run.BTuart_Time_Enable = 0;
+	Sys_run.BTuart_Out_Run_Time = 0;
 	TIM_Configuration();
 	/* NVIC configuration */
 	NVIC_Configuration(); 		

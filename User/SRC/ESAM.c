@@ -214,6 +214,7 @@ u8 ReadRand1(void)//¶ÁÈ¡Ëæ»úÊı1
 		for(i=0;i<8;i++)
 		{
 			ESAMRand1[i] = pGet[i];
+//			ESAMRand1[i] = i;
 		}
 		return 1;
 	}

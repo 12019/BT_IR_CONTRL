@@ -570,6 +570,12 @@ void Time_Comp(void)
 		Sys_run.Check_Bat_Time = 0;
 		ADC_filter();
 	}
+	if((Sys_run.BTuart_Time_Enable == 1)&&(Sys_run.BTuart_Out_Run_Time > MAXBTUARTOUT))
+	{
+		Sys_run.BTuart_Out_Run_Time = 0;
+		Sys_run.BTuart_Time_Enable = 0;
+		Clear_RxBuffer3();
+	}
 }
 
 
@@ -621,16 +627,17 @@ void SendOneByte(u8 Byte)
 	{
 		Set_IRDA_power_ON();
 	}
-
+//	EXTI9_5_DISABLE();
 	RX_FLAG = 0;
 	CountRX = 0;
 	Receive_bit = 0;
 	
 	TX_FLAG = 1;
+	CountTX = 0;
 	Tx_Parity = 0;
 	BYTE = Byte;
 	while(TX_FLAG == 1);
-	EXTI9_5_ENABLE();
+//	EXTI9_5_ENABLE();
 	delay_nms(1);
 }
 

@@ -199,14 +199,14 @@ void SysTick_Handler(void)
 	if(RX_FLAG)
 	{
 		CountRX++;
-		if((CountRX == (IR_BaudRate_Time>>1))&&(Receive_bit == 0))
+		if((CountRX == ((IR_BaudRate_Time>>1)))&&(Receive_bit == 0))
 		{
 			if(GPIOA->IDR&(1<<5)) 
 			{
 				RX_FLAG = 0;
 				CountRX = 0;
 				Receive_bit = 0;
-				EXTI9_5_ENABLE();	
+//				EXTI9_5_ENABLE();	
 			}
 			else//起始位
 			{
@@ -250,7 +250,7 @@ void SysTick_Handler(void)
 				RX_FLAG = 0;
 				CountRX = 0;
 				Receive_bit = 0;
-				EXTI9_5_ENABLE();			
+//				EXTI9_5_ENABLE();			
 			}
 		}
 	}	
@@ -320,6 +320,7 @@ void USART3_IRQHandler(void)//蓝牙通道
 {
 	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)//接收寄存器满中断
 	{
+		Sys_run.BTuart_Time_Enable = 1;
 		if(RxCounter3 < MAXBUFFER)
 		{
 			RxBuffer3[RxCounter3++] = USART_ReceiveData(USART3);			
@@ -369,6 +370,10 @@ void TIM3_IRQHandler(void)
 		Sys_run.Out_run_Time_RS485++;
 		Sys_run.Sleep_run_Time++;
 		Sys_run.Check_Bat_Time++;
+		if(Sys_run.BTuart_Time_Enable == 1)
+		{
+			Sys_run.BTuart_Out_Run_Time ++;
+		}
 		if(BAT_Low_FLAG)
 		{
 			Sys_run.Sleep_run_Time_BatLow++;
@@ -385,7 +390,7 @@ void EXTI9_5_IRQHandler(void)//PA5
 		if((TX_FLAG == 0)&&(RX_FLAG == 0))
 		{
 			RX_FLAG = 1;
-			EXTI9_5_DISABLE();
+//			EXTI9_5_DISABLE();
 		}
 	}
 }
