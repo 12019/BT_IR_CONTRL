@@ -31,6 +31,7 @@
 #define FN4 04	//认证后抄表
 #define FN5 05	//认证测试
 #define FN6 06	//IAP升级
+#define FN7 07	//设置蓝牙模块名称
 
 
 volatile FLASH_Status FLASHStatus;
@@ -135,6 +136,12 @@ u8 CheckHE(void)
 							}
 							break;
 						case FN6:
+							break;
+						case FN7:
+							for(j=0;j<4;j++)
+							{
+								Dat_dbuf.AFN1D.afn1_f7.BTname[j] = RxBuffer3[i+5+j];
+							}							
 							break;
 						default:
 							break;
@@ -415,10 +422,14 @@ void AF1_F5_Proc(void)
 	{
 		Set_ESAM_power_ON();
 		Ver_flag = 1;
-		Re = DoVerifica(Dat_dbuf.AFN1D.afn1_f4.DBAddr);
+		Re = DoVerifica(Dat_dbuf.AFN1D.afn1_f5.DBAddr);
 		Ver_flag = 0;				
 		ReturnFeame.Data_uBuf.afn2_f5.SendStas = Re + 1;		
 	}
+}
+void AF1_F7_Proc(void)
+{
+	BTSetName(Dat_dbuf.AFN1D.afn1_f7.BTname);
 }
 
 void AF1_Lib_Proc(void)
@@ -444,6 +455,9 @@ void AF1_Lib_Proc(void)
 			AF1_F5_Proc();
 			break;
 		case FN6:
+			break;
+		case FN7:
+			AF1_F7_Proc();
 			break;
 		default:
 			break;

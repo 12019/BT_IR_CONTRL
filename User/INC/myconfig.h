@@ -209,13 +209,22 @@ typedef struct
 	unsigned char OutTime_Thisport;
 	unsigned char DBAddr[6];
 	unsigned char TransLen;
-	unsigned char TransData[0xff];
+	unsigned char TransData[0xFF];
 }AFN1d_F4_t;
 
 typedef struct 
 {
 	unsigned char DBAddr[6];
 }AFN1d_F5_t;
+typedef struct 
+{
+	unsigned char IAPdata[0xFF];
+}AFN1d_F6_t;
+typedef struct 
+{
+	unsigned char BTname[0x04];
+}AFN1d_F7_t;
+
 
 #pragma pack(push,1)
 typedef struct 
@@ -227,6 +236,8 @@ typedef struct
 		AFN1d_F3_t afn1_f3;
 		AFN1d_F4_t afn1_f4;
 		AFN1d_F5_t afn1_f5;
+		AFN1d_F6_t afn1_f6;
+		AFN1d_F7_t afn1_f7;
 	};
 }AFN1d_t;
 typedef struct 
