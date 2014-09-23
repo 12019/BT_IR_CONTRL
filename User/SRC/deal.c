@@ -354,21 +354,41 @@ void AF1_F3_Proc(void)
 {
 	u8 RandEncData[16];
 	u8 i;
-	Set_ESAM_power_ON();
+	if(POW_ESAM == 0)
+	{
+		Set_ESAM_power_ON();
+		Sys_run.ESAM_Time_Enable = 1;
+		Sys_run.ESAM_Out_Time = 0;
+	}
+	else
+	{
+		Sys_run.ESAM_Time_Enable = 1;
+		Sys_run.ESAM_Out_Time = 0;		
+	}
 	Get_ESAM_Data(Dat_dbuf.AFN1D.afn1_f3.DBAddr,RandEncData);
 	for(i=0;i<8;i++)
 	{
 		ReturnFeame.Data_uBuf.afn2_f3.SendRand1[i] = RandEncData[i];
 		ReturnFeame.Data_uBuf.afn2_f3.SendEncD1[i] = RandEncData[8+i];
 	}
-	Set_ESAM_power_OFF();	
+//	Set_ESAM_power_OFF();	
 }
 void AF1_F4_Proc(void)
 {
 	u8 Re;
 	if(Sys_config.IrDAisconfed)
 	{
-		Set_ESAM_power_ON();
+		if(POW_ESAM == 0)
+		{
+			Set_ESAM_power_ON();
+			Sys_run.ESAM_Time_Enable = 1;
+			Sys_run.ESAM_Out_Time = 0;
+		}
+		else
+		{
+			Sys_run.ESAM_Time_Enable = 1;
+			Sys_run.ESAM_Out_Time = 0;		
+		}
 		Ver_flag = 1;
 		Re = DoVerifica(Dat_dbuf.AFN1D.afn1_f4.DBAddr);
 		Ver_flag = 0;				
@@ -384,7 +404,7 @@ void AF1_F4_Proc(void)
 			ReturnFeame.Data_uBuf.afn2_f4.AFN = AFN0;
 			ReturnFeame.Data_uBuf.afn2_f4.sta = Re - 2;
 		}
-		Set_ESAM_power_OFF();		
+//		Set_ESAM_power_OFF();		
 	}
 }
 
@@ -580,6 +600,12 @@ void Time_Comp(void)
 		Sys_run.BTuart_Time_Enable = 0;
 		Sys_run.BTuart_Out_Run_Time = 0;
 		Clear_RxBuffer3();
+	}
+	if((Sys_run.ESAM_Time_Enable == 1)&&(Sys_run.ESAM_Out_Time > MAXESAMOUT*100))
+	{
+		Sys_run.ESAM_Time_Enable = 0;
+		Sys_run.ESAM_Out_Time = 0;
+		Set_ESAM_power_OFF();	
 	}
 }
 

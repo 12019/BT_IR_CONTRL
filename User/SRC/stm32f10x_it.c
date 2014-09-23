@@ -379,6 +379,10 @@ void TIM3_IRQHandler(void)
 		{
 			Sys_run.Sleep_run_Time_BatLow++;
 		}
+		if(Sys_run.ESAM_Time_Enable == 1)
+		{
+			Sys_run.ESAM_Out_Time++;
+		}
 	}
 }
 

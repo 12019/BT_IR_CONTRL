@@ -810,14 +810,14 @@ void Set_ESAM_power_ON(void)
 {
 	ISO7816_Enable();
 	PWR_ESAM_ON();	
-	POW_ESAM = 0;
+	POW_ESAM = 1;
 	ESAM_Reset();
 }
 void Set_ESAM_power_OFF(void)
 {
 	ISO7816_Disable();
 	PWR_ESAM_OFF();
-	POW_ESAM =1;
+	POW_ESAM =0;
 }
 
 
