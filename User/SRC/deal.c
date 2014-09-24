@@ -210,56 +210,59 @@ void Return_BT(void)
 			tempdata[3] = ReturnFeame.Data_uBuf.AFN;
 			tempdata[4] = ReturnFeame.Data_uBuf.Fn;
 			tempdata[5] = ReturnFeame.Data_uBuf.SendLen;
-			switch(Dat_dbuf.WriteFN)
+			if(ReturnFeame.Data_uBuf.SendLen>0)
 			{
-				case FN0:
-					tempdata[6] = ReturnFeame.Data_uBuf.afn2_f0.flag;
-					tempdata[7] = ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperl;
-					tempdata[8] = ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperh;
-					tempdata[9] = ReturnFeame.Data_uBuf.afn2_f0.ver.Xver;
-					tempdata[10] = ReturnFeame.Data_uBuf.afn2_f0.ver.Sver;
-					tempdata[11] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.yearh;
-					tempdata[12] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.yearl;
-					tempdata[13] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.mon;
-					tempdata[14] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.date;
-					tempdata[15] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.hour;
-					tempdata[16] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.min;
-					tempdata[17] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.sec;
-					break;
-				case FN1:
-					for(i=0;i<ReturnFeame.Data_uBuf.SendLen;i++)
-					{
-						tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f1.SendData[i];						
-					}
-				case FN2:
-					for(i=0;i<ReturnFeame.Data_uBuf.SendLen;i++)
-					{
-						tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f2.SendData[i];						
-					}
-					break;
-				case FN3:
-					for(i=0;i<8;i++)
-					{
-						tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f3.SendRand1[i];						
-					}
-					for(i=0;i<8;i++)
-					{
-						tempdata[14+i] = ReturnFeame.Data_uBuf.afn2_f3.SendEncD1[i];						
-					}						
-					break;
-				case FN4:
-					for(i=0;i<ReturnFeame.Data_uBuf.SendLen;i++)
-					{
-						tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f4.SendData[i];						
-					}					
-					break;
-				case FN5:
-					tempdata[6] = ReturnFeame.Data_uBuf.afn2_f5.SendStas;
-					break;
-				case FN6:
-					break;
-				default:
-					break;
+				switch(Dat_dbuf.ReadFN)
+				{
+					case FN0:
+						tempdata[6] = ReturnFeame.Data_uBuf.afn2_f0.flag;
+						tempdata[7] = ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperl;
+						tempdata[8] = ReturnFeame.Data_uBuf.afn2_f0.leftbat.batperh;
+						tempdata[9] = ReturnFeame.Data_uBuf.afn2_f0.ver.Xver;
+						tempdata[10] = ReturnFeame.Data_uBuf.afn2_f0.ver.Sver;
+						tempdata[11] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.yearh;
+						tempdata[12] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.yearl;
+						tempdata[13] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.mon;
+						tempdata[14] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.date;
+						tempdata[15] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.hour;
+						tempdata[16] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.min;
+						tempdata[17] = ReturnFeame.Data_uBuf.afn2_f0.ver.CompilTime.sec;
+						break;
+					case FN1:
+						for(i=0;i<ReturnFeame.Data_uBuf.SendLen;i++)
+						{
+							tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f1.SendData[i];						
+						}
+					case FN2:
+						for(i=0;i<ReturnFeame.Data_uBuf.SendLen;i++)
+						{
+							tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f2.SendData[i];						
+						}
+						break;
+					case FN3:
+						for(i=0;i<8;i++)
+						{
+							tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f3.SendRand1[i];						
+						}
+						for(i=0;i<8;i++)
+						{
+							tempdata[14+i] = ReturnFeame.Data_uBuf.afn2_f3.SendEncD1[i];						
+						}						
+						break;
+					case FN4:
+						for(i=0;i<ReturnFeame.Data_uBuf.SendLen;i++)
+						{
+							tempdata[6+i] = ReturnFeame.Data_uBuf.afn2_f4.SendData[i];						
+						}					
+						break;
+					case FN5:
+						tempdata[6] = ReturnFeame.Data_uBuf.afn2_f5.SendStas;
+						break;
+					case FN6:
+						break;
+					default:
+						break;
+				}				
 			}
 			tempdata[ReturnFeame.len+3] = 0;
 			tempdata[ReturnFeame.len+3] = CheckSum(tempdata,ReturnFeame.len+3);
