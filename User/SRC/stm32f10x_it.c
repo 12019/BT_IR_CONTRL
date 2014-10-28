@@ -148,51 +148,86 @@ void SysTick_Handler(void)
 	if(TX_FLAG)
 	{
 		CountTX++;
-		if(Tx_bit == 0)//发送起始位
+		if((CountTX <= PREAMBLE_T*2)&&(Tx_bit == 0))//发送起始位
 		{
-		TXD_low(); 
-		CountTX = 0;
-		Tx_bit = 1;
-		}
-		else if((CountTX == IR_BaudRate_Time)&&(Tx_bit > 0)&&(Tx_bit < 9))//8bit数据
-		{
-			tmp	= (BYTE >> (Tx_bit - 1))& 0x01;
-			if(tmp == 0)
+			if(CountTX <= PREAMBLE_T)
 			{
-				TXD_low();		
+				TXD_high();  
 			}
 			else
 			{
-				TXD_high();
-				Tx_Parity++;
+				TXD_low(); 				
 			}
-			CountTX = 0;
-			Tx_bit++;
+			CountTX = 0;				
+			Tx_bit = 1;
 		}
-		else if((CountTX == IR_BaudRate_Time)&&(Tx_bit == 9))//效验位
+		else if((CountTX <= LOGIC_1_H+LOGIC_1_L)&&(Tx_bit > 0)&&(Tx_bit < 5))	//4位地址
 		{
-			if(Tx_Parity%2 == 0)
+			if(CountTX <= LOGIC_1_H)
 			{
-				TXD_low();	
+				TXD_high(); 
 			}
 			else
 			{
-				TXD_high();
+				TXD_low(); 		
 			}
 			CountTX = 0;
 			Tx_bit++;
 		}
-		else if((CountTX == IR_BaudRate_Time)&&(Tx_bit == 10))//停止位
+		else if((CountTX <= LOGIC_1_H+LOGIC_1_L)&&(Tx_bit > 4)&&(Tx_bit < 13))//8bit数据
 		{
-			TXD_high();
-			CountTX = 0;
-			Tx_bit++;
+			tmp	= (BYTE >> (Tx_bit - 5))& 0x01;
+			if((CountTX <= LOGIC_0_H))
+			{
+				TXD_high(); 
+			}
+			else if((tmp == 0)&&(CountTX <= LOGIC_0_H+LOGIC_0_L))
+			{
+				TXD_low(); 
+			}
+			else if((tmp == 1)&&(CountTX <= LOGIC_1_H+LOGIC_1_L))
+			{
+				TXD_low();
+			}
+			else
+			{
+				CountTX = 0;
+				Tx_bit++;							
+			}
 		}
-		else if((CountTX == IR_BaudRate_Time)&&(Tx_bit == 11))
+		else if((CountTX <= LOGIC_0_H+LOGIC_0_L)&&(Tx_bit > 12)&&(Tx_bit < 17))//地址反码
 		{
-		CountTX = 0;
-		TX_FLAG = 0;
-		Tx_bit = 0;
+			if(CountTX <= LOGIC_0_H)
+			{
+				TXD_high(); 
+			}
+			else
+			{
+				TXD_low(); 		
+			}
+			CountTX = 0;
+			Tx_bit++;			
+		}
+		else if((CountTX <= LOGIC_1_H+LOGIC_1_L)&&(Tx_bit > 16)&&(Tx_bit < 25))//8bit数据反码
+		{
+			tmp	= (~BYTE >> (Tx_bit - 15))& 0x01;
+			if((CountTX <= LOGIC_0_H))
+			{
+				TXD_high(); 
+			}
+			else if((tmp == 0)&&(CountTX <= LOGIC_0_H+LOGIC_0_L))
+			{
+				TXD_low(); 
+			}
+			else if((tmp == 1)&&(CountTX <= LOGIC_1_H+LOGIC_1_L))
+			{
+				TXD_low();
+			}
+			else
+			{
+				CountTX = 0;
+				Tx_bit++;							
+			}
 		}
 	}
 	

@@ -15,9 +15,9 @@ void ESAM_Reset(void)
 //	delay_nms(10);
 //	Set_ESAM_power_ON();
 	delay_nms(100);
-	GPIO_ESAMRST_ON();/* Set RSTIN LOW */  
+//	GPIO_ESAMRST_ON();/* Set RSTIN LOW */  
 	delay_nms(0x100);	
-	GPIO_ESAMRST_OFF(); 	/* Set RSTIN HIGH */  
+//	GPIO_ESAMRST_OFF(); 	/* Set RSTIN HIGH */  
 	delay_nms(100);
 }
 

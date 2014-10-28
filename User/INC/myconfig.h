@@ -12,8 +12,6 @@
 #define		ISO7816MAXWAITmS	400
 #define		IRDAMAXWAITmS	3000
 
-#define TXD_high()		GPIO_SetBits(GPIOA, GPIO_Pin_6)
-#define TXD_low()		GPIO_ResetBits(GPIOA, GPIO_Pin_6)
 
 #define	XVER 0x20 		//协议版本
 #define	SVER 0x10 		//版本号
@@ -86,38 +84,37 @@
 #define BLINKMATCH	2
 #define BLINKWAIT		3
 
+#define TXD_high()		GPIO_SetBits(GPIOA, GPIO_Pin_2)
+#define TXD_low()		GPIO_ResetBits(GPIOA, GPIO_Pin_2)
+
+#define	PWR_BL_ON()			GPIO_ResetBits(GPIOB, GPIO_Pin_13)
+#define	PWR_BL_OFF()		GPIO_SetBits(GPIOB, GPIO_Pin_13)
+
 #define	GPIO_BLRST_ON()			GPIO_ResetBits(GPIOA, GPIO_Pin_12)
 #define	GPIO_BLRST_OFF()		GPIO_SetBits(GPIOA, GPIO_Pin_12)
 
-#define	GPIO_BLSET_ON()			GPIO_SetBits(GPIOB, GPIO_Pin_7)
-#define	GPIO_BLSET_OFF()		GPIO_ResetBits(GPIOB, GPIO_Pin_7)
+#define	GPIO_BLSET_ON()			GPIO_SetBits(GPIOA, GPIO_Pin_4)
+#define	GPIO_BLSET_OFF()		GPIO_ResetBits(GPIOA, GPIO_Pin_4)
 
 #define	RUN_ON()		GPIO_SetBits(GPIOA, GPIO_Pin_0)
 #define	RUN_OFF()		GPIO_ResetBits(GPIOA, GPIO_Pin_0)
 #define	RUN_TOG()		GPIO_WriteBit(GPIOA, GPIO_Pin_0, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOA, GPIO_Pin_0)))
 
-#define	PWR_IR_ON()			GPIO_ResetBits(GPIOB, GPIO_Pin_13)
-#define	PWR_IR_OFF()		GPIO_SetBits(GPIOB, GPIO_Pin_13)
+#define	PWR_IR_ON()			GPIO_ResetBits(GPIOB, GPIO_Pin_12)
+#define	PWR_IR_OFF()		GPIO_SetBits(GPIOB, GPIO_Pin_12)
 
-#define	PWR_BL_ON()			GPIO_ResetBits(GPIOB, GPIO_Pin_14)
-#define	PWR_BL_OFF()		GPIO_SetBits(GPIOB, GPIO_Pin_14)
+#define LED1_1				0 != GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_6)
+#define	LED1_0				0 == GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_6)
 
-#define	PWR_485_ON()		GPIO_ResetBits(GPIOA, GPIO_Pin_11)
-#define	PWR_485_OFF()		GPIO_SetBits(GPIOA, GPIO_Pin_11)
+#define LED2_1				0 != GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_7)
+#define	LED2_0				0 == GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_7)
 
-#define	PWR_ESAM_ON()			GPIO_ResetBits(GPIOB, GPIO_Pin_12)
-#define	PWR_ESAM_OFF()		GPIO_SetBits(GPIOB, GPIO_Pin_12)
-
-#define   GPIO_ESAMRST_OFF()  GPIO_SetBits(GPIOA, GPIO_Pin_7)
-#define   GPIO_ESAMRST_ON()  GPIO_ResetBits(GPIOA, GPIO_Pin_7)
-
-#define LED1_1				0 != GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_5)
-#define	LED1_0				0 == GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_5)
-
-#define LED2_1				0 != GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6)
-#define	LED2_0				0 == GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6)
-
-
+/* RC199遥控编码控制区*/
+#define PREAMBLE_T		400	//4ms
+#define LOGIC_1_H			50
+#define LOGIC_1_L			190
+#define LOGIC_0_H			50
+#define LOGIC_0_L			90
 
 #pragma  anon_unions
 
@@ -177,122 +174,14 @@ typedef struct
 	unsigned char BTuart_Time_Enable;
 }Sys_Runed;
 
+typedef struct 
+{
+	unsigned char CTL;
+	unsigned char Len;
+	unsigned char DATA[10];
+	unsigned char DATA_LEN;
+}Sys_data;
 
-typedef struct 
-{
-	unsigned char Port;
-	unsigned char BaudRate;
-	unsigned char Parity;
-	unsigned char SysSleepTime;
-}AFN1d_F0_t;
-
-typedef struct 
-{
-	unsigned char OutTime_Thisport;
-	unsigned char TransLen;
-	unsigned char TransData[0xff];
-}AFN1d_F12_t;
-typedef struct 
-{
-	unsigned char OutTime_Thisport;
-	unsigned char TransLen;
-	unsigned char TransData[0xff];
-}AFN1d_F2_t;
-
-typedef struct 
-{
-	unsigned char DBAddr[6];
-}AFN1d_F3_t;
-
-typedef struct 
-{
-	unsigned char OutTime_Thisport;
-	unsigned char DBAddr[6];
-	unsigned char TransLen;
-	unsigned char TransData[0xFF];
-}AFN1d_F4_t;
-
-typedef struct 
-{
-	unsigned char DBAddr[6];
-}AFN1d_F5_t;
-typedef struct 
-{
-	unsigned char IAPdata[0xFF];
-}AFN1d_F6_t;
-typedef struct 
-{
-	unsigned char BTname[0x04];
-}AFN1d_F7_t;
-
-
-#pragma pack(push,1)
-typedef struct 
-{
-	union
-	{
-		AFN1d_F0_t afn1_f0;
-		AFN1d_F12_t afn1_f12;
-		AFN1d_F3_t afn1_f3;
-		AFN1d_F4_t afn1_f4;
-		AFN1d_F5_t afn1_f5;
-		AFN1d_F6_t afn1_f6;
-		AFN1d_F7_t afn1_f7;
-	};
-}AFN1d_t;
-typedef struct 
-{
-	unsigned char ReadLen;	
-}AFN2d_t;
-typedef struct 
-{
-	unsigned char Length;
-	unsigned char Contrl;
-	unsigned char AFN;
-	unsigned char WriteFN;
-	unsigned char ReadFN;	
-	union
-	{
-		AFN1d_t AFN1D;
-		AFN2d_t AFN2D;
-	};	
-}DataDown;
-#pragma pack(pop)
-
-typedef struct 
-{
-	unsigned char flag;
-	LeftBat leftbat;
-	Version ver; 
-}AFN2u_F0_t;
-
-typedef struct 
-{
-	unsigned char SendData[0xff];
-}AFN2u_F1_t;
-
-typedef struct 
-{
-	unsigned char SendData[0xff];
-}AFN2u_F2_t;
-
-typedef struct 
-{
-	unsigned char SendRand1[0x08];
-	unsigned char SendEncD1[0x08];
-}AFN2u_F3_t;
-
-typedef struct 
-{
-	unsigned char AFN;
-	unsigned char sta;
-	unsigned char SendData[0xff];
-}AFN2u_F4_t;
-
-typedef struct 
-{
-	unsigned char SendStas;	
-}AFN2u_F5_t;
 
 #pragma pack(push,1)
 typedef struct 
@@ -300,24 +189,19 @@ typedef struct
 	unsigned char AFN;
 	unsigned char Fn;
 	unsigned char SendLen;
-	union
-	{
-		AFN2u_F0_t afn2_f0;
-		AFN2u_F1_t afn2_f1;
-		AFN2u_F2_t afn2_f2;
-		AFN2u_F3_t afn2_f3;
-		AFN2u_F4_t afn2_f4;
-		AFN2u_F5_t afn2_f5;
-	};	
+//	union
+//	{
+//		AFN2u_F0_t afn2_f0;
+//		AFN2u_F1_t afn2_f1;
+//		AFN2u_F2_t afn2_f2;
+//		AFN2u_F3_t afn2_f3;
+//		AFN2u_F4_t afn2_f4;
+//		AFN2u_F5_t afn2_f5;
+//	};	
 }AFN2u_t;
 #pragma pack(pop)
 
-typedef struct 
-{
-	unsigned char len;
-	unsigned char contrl;
-	AFN2u_t Data_uBuf;
-}Frame_ut;
+
 
 #ifdef  root
 	#define EXT_ 
@@ -347,11 +231,9 @@ EXT_ u16 MaxNbrofTx1;
 EXT_ u16 MaxNbrofTx2;
 EXT_ u16 MaxNbrofTx3;
 
-EXT_ DataDown Dat_dbuf;
 EXT_ Sys_Confed Sys_config;
 EXT_ Sys_Runed Sys_run;
-EXT_ Frame_ut ReturnFeame;
-
+EXT_ Sys_data Sys_D;
 EXT_ u8 BAT_Low_FLAG;
 
 
@@ -362,7 +244,7 @@ EXT_ u8 BYTE;
 EXT_ u8 TX_FLAG;
 EXT_ u8 RX_FLAG;
 
-EXT_ u8 CountTX;
+EXT_ u16 CountTX;
 EXT_ u8 Send_bit;
 EXT_ u8 Tx_bit;
 EXT_ u8 Tx_Parity;
@@ -412,6 +294,7 @@ void ISO7816_Enable(void);
 void ISO7816_Disable(void);
 void SetUartState(u8 COM, u32 BaudRate,u16 Parity);
 void TIM_Configuration(void);
+void TIM2_Configuration_56K(void);
 void PWM_Disable(void);
 void PWM_Enable(void);
 void IWDG_Configuration(void);

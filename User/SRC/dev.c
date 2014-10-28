@@ -194,34 +194,6 @@ void GPIO_Configuration(void)
 	/* Enable GPIOB clocks */
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
 		
-	/*********Configure USART1 as UART****/		
-	/* Configure USART1 Rx (PA.10) as input floating */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	
-	/* Configure USART1 Tx (PA.09) as alternate function push-pull */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);	 	
-
-	/* Configure USART2 CK(PA.4) as alternate function push-pull */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-/* Configure USART2 Rx (PA.7) as SmartCard Reset  */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-	/* Configure USART2 Tx (PA.2) as alternate function open-drain */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
- 	GPIO_SetBits(GPIOA,GPIO_Pin_2|GPIO_Pin_3|GPIO_Pin_4);//初始化管脚拉高	
 
 	/*********Configure USART3 as UART****/		
 	/* Configure USART3 Rx (PB.11) as input floating  */
@@ -235,49 +207,42 @@ void GPIO_Configuration(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_Init(GPIOB, &GPIO_InitStructure); 
 	
-	//PA11(PWR_485)
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	GPIO_SetBits(GPIOA,GPIO_Pin_11);//关485电源
-	
 	/*Configuration PA1 (TIM2 channel 2) as alternate function push-pull */ //PA1 PWM 输出
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+/*Configuration PA2(IR_TXD)  as alternate push-pull */
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_2 ;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 	
-	/*Configuration PB14(PWR_BL) PB13(PWR_IR) PB12(PWR_ESAM) as alternate push-pull */
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14;
+	/*Configuration PB13(PWR_BL)  as alternate push-pull */
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_13 ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	GPIO_SetBits(GPIOB,GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14);//关BL IR ESAM电源	
+	GPIO_SetBits(GPIOB, GPIO_Pin_13);//关BL IR ESAM电源	
 	
-		/* Configure PB.07(B_SET) as alternate push-pull  */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+		/* Configure PA04(BT_SET) as alternate push-pull  */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	GPIO_ResetBits(GPIOB, GPIO_Pin_7);
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_ResetBits(GPIOA, GPIO_Pin_4);
 	
 	/*Configuration PA00(LED-RUN) PA12(B_RE) as alternate push-pull */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_12;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	GPIO_ResetBits(GPIOA, GPIO_Pin_0);//LED OFF
-	GPIO_SetBits(GPIOA, GPIO_Pin_12);//BL RESET HI
+	GPIO_SetBits(GPIOA, GPIO_Pin_0|GPIO_Pin_12);//BL RESET HI
 	
-	/* Configure PB.05(LED1) PB.06(LED2) as input floating  */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6;
+	/* Configure PA06(LED1) PA07(LED2) as input floating  */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	
-	/* Configure PB.0(ADIN) as AIN Mode */
-	GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_0;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);	
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 	
 	RUN_ON();
 	}
@@ -321,11 +286,11 @@ void USART_Configuration(void)
 	USART_Init(USART3, &USART_InitStructure);
 
 	/* Enable the USART1 USART3*/
-	USART_Cmd(USART1, ENABLE); 
+//	USART_Cmd(USART1, ENABLE); 
 	USART_Cmd(USART3, ENABLE); 
 
 	/* Enable USART1 Receive and Transmit interrupts */
-	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+//	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
 	/* Enable USART3 Receive and Transmit interrupts */
 	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
 	}
@@ -598,7 +563,36 @@ void TIM_Configuration(void)
 	/* TIM3 enable counter */
 	TIM_Cmd(TIM3, ENABLE);	
 	}
-	
+
+void TIM2_Configuration_56K(void)
+{
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+	TIM_OCInitTypeDef  TIM_OCInitStructure;
+		/* TIM2 clock enable */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+		/* ---------------------------------------------------------------
+	TIM2 Configuration: Output Compare Inactive Mode:
+	TIM2CLK = 24 MHz, Prescaler = 631, TIM2 counter clock = 38.034KHz
+	--------------------------------------------------------------- */ 	
+	/* Time base configuration */ //PA1 PWM OUT
+	TIM_TimeBaseStructure.TIM_Period = 428; //38.014K
+	TIM_TimeBaseStructure.TIM_Prescaler = 0;
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+		/* Output Compare Active Mode configuration: Channel2 */
+	// PWM1 Mode configuration: Channel2
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_Pulse = 214;	//CCR1_Val;	//50% 
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;//TIM_OCPolarity_High ;//	//比较前(后)的电平状态
+	TIM_OC2Init(TIM2, &TIM_OCInitStructure);
+	TIM_OC2PreloadConfig(TIM2, TIM_OCPreload_Enable);
+	TIM_ARRPreloadConfig(TIM2, ENABLE);
+	// TIM2 enable counter
+  TIM_Cmd(TIM2, DISABLE);//TIM_Cmd(TIM2, ENABLE);
+}
+
 void PWM_Disable(void)
 {
 	TIM_Cmd(TIM2, DISABLE);
@@ -625,7 +619,7 @@ void IWDG_Configuration(void)
 	/* Enable write access to IWDG_PR and IWDG_RLR registers */
 	IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
 	
-	/* IWDG counter clock: 40KHz(LSI) / 32 = 1.25 KHz */
+	/* IWDG counter clock: 40KHz(LSI) / 256 = 156 Hz */
 	IWDG_SetPrescaler(IWDG_Prescaler_256);
 	
 	/* Set counter reload value to 1999 */
@@ -781,7 +775,7 @@ void GetBuildTime(void)
 
 void Set_IRDA_power_ON(void)
 {
-	IR_GPIO_Init();
+//	IR_GPIO_Init();
 	PWM_Enable();
 	PWR_IR_ON();
 	TX_FLAG = 0;
@@ -798,25 +792,25 @@ void Set_IRDA_power_OFF(void)
 
 void Set_RS485_power_ON(void)
 {	
-	PWR_485_ON();
+//	PWR_485_ON();
 	POW_RS485 = 1;
 }
 void Set_RS485_power_OFF(void)
 {	
-	PWR_485_OFF();	
+//	PWR_485_OFF();	
 	POW_RS485 = 0;
 }
 void Set_ESAM_power_ON(void)
 {
 	ISO7816_Enable();
-	PWR_ESAM_ON();	
+//	PWR_ESAM_ON();	
 	POW_ESAM = 1;
 	ESAM_Reset();
 }
 void Set_ESAM_power_OFF(void)
 {
 	ISO7816_Disable();
-	PWR_ESAM_OFF();
+//	PWR_ESAM_OFF();
 	POW_ESAM =0;
 }
 

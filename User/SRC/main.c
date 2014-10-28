@@ -33,7 +33,7 @@ int main(void)
 	/*USART configuration*/
 	USART_Configuration();
 	/*7816 configuration*/
-	ISO7816_Enable();
+//	ISO7816_Enable();
 	/*TIM configuration*/
 	Sys_run.Out_run_Time_IRDA = 0;
 	Sys_run.Out_run_Time_RS485 = 0;
@@ -43,12 +43,13 @@ int main(void)
 	Sys_run.BTuart_Time_Enable = 0;
 	Sys_run.BTuart_Out_Run_Time = 0;
 	TIM_Configuration();
+	TIM2_Configuration_56K();
 	/* NVIC configuration */
 	NVIC_Configuration(); 		
   /* Configure the SysTick to generate an interrupt each 10 Microseconds */
   SysTick_Configuration();
 	/*ADC configuration*/
-	myADC_init();	
+//	myADC_init();	
 	
 	BTSet();
 
