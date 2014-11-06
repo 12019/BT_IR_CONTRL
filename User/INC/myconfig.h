@@ -103,6 +103,9 @@
 #define	PWR_IR_ON()			GPIO_ResetBits(GPIOB, GPIO_Pin_12)
 #define	PWR_IR_OFF()		GPIO_SetBits(GPIOB, GPIO_Pin_12)
 
+#define	PWR_EXT_ON()			GPIO_SetBits(GPIOB, GPIO_Pin_0)
+#define	PWR_EXT_OFF()			GPIO_ResetBits(GPIOB, GPIO_Pin_0)
+
 #define LED1_1				0 != GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_6)
 #define	LED1_0				0 == GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_6)
 
@@ -110,11 +113,26 @@
 #define	LED2_0				0 == GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_7)
 
 /* RC199遥控编码控制区*/
-#define PREAMBLE_T		400	//4ms
-#define LOGIC_1_H			50
-#define LOGIC_1_L			190
-#define LOGIC_0_H			50
-#define LOGIC_0_L			90
+#define RC199_PREAMBLE_T		400	//4ms
+#define RC199_LOGIC_1_H			50
+#define RC199_LOGIC_1_L			190
+#define RC199_LOGIC_1_ALL		(RC199_LOGIC_1_H+RC199_LOGIC_1_L)
+#define RC199_LOGIC_0_H			50
+#define RC199_LOGIC_0_L			90
+#define RC199_LOGIC_0_ALL		(RC199_LOGIC_0_H+RC199_LOGIC_0_L)	
+
+/* NEC遥控编码控制区*/
+#define NEC_PREAMBLE_T_H	900	//9ms
+#define NEC_PREAMBLE_T_L	450	//4.5ms
+#define NEC_LOGIC_1_H			56	//0.56ms
+#define NEC_LOGIC_1_ALL		225 //2.25ms
+#define NEC_LOGIC_0_H			56  //0.56ms
+#define NEC_LOGIC_0_ALL		112	//1.12ms
+
+#define POW_IR_OFF	0x00
+#define POW_IR_56K	0x01
+#define POW_IR_38K	0x02
+
 
 #pragma  anon_unions
 
@@ -294,6 +312,7 @@ void ISO7816_Enable(void);
 void ISO7816_Disable(void);
 void SetUartState(u8 COM, u32 BaudRate,u16 Parity);
 void TIM_Configuration(void);
+void TIM2_Configuration_38K(void);
 void TIM2_Configuration_56K(void);
 void PWM_Disable(void);
 void PWM_Enable(void);
@@ -335,12 +354,16 @@ void ESAM_Info(void);
 /*******模拟串口功能函数区*************/
 void IR_GPIO_Init(void);
 void SendOneByte(u8 Byte);
+void SendOneByte_56K(u8 addr,u8 Byte);
+void SendOneByte_38K(u8 addr,u8 Byte);
+
 void SendBytes(u8 *str,u8 len);
 
 void EXTI9_5_DISABLE(void);
 void EXTI9_5_ENABLE(void);
 
-void Set_IRDA_power_ON(void);
+void Set_IRDA_power_ON_56K(void);
+void Set_IRDA_power_ON_38K(void);
 void Set_IRDA_power_OFF(void);
 void Set_RS485_power_ON(void);
 void Set_RS485_power_OFF(void);

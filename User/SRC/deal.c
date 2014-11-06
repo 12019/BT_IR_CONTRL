@@ -36,6 +36,7 @@
 #define FN7 07	//设置蓝牙模块名称
 
 
+
 volatile FLASH_Status FLASHStatus;
 
 void do_contrl_pro(void)
@@ -130,6 +131,21 @@ void AF1_Lib_Proc(void)
 void AF2_Lib_Proc(void)
 {
 }
+
+void EXT_CTRL(void)
+{
+	switch(Sys_D.DATA[0])
+	{
+		case 0x00:
+			PWR_EXT_OFF();
+			break;
+		case 0x01:
+			PWR_EXT_ON();	
+			break;
+			default:
+				break;			
+	}
+}
 void BT_Analysis(void)
 {
 	if(1 == CheckHE())
@@ -137,13 +153,13 @@ void BT_Analysis(void)
 		switch(Sys_D.CTL)
 		{
 			case FRMAEHEAD0:
-				SendOneByte(Sys_D.DATA[0]);
+				SendOneByte_56K(0xff,Sys_D.DATA[0]);
 				break;
 			case FRMAEHEAD1:
-				AF1_Lib_Proc();
+				SendOneByte_38K(0xff,Sys_D.DATA[0]);				
 				break;
 			case FRMAEHEAD2:
-				AF2_Lib_Proc();
+				EXT_CTRL();
 				break;
 			default:
 				break;
@@ -171,8 +187,8 @@ void Time_Comp(void)
 	}
 	if(Sys_run.Check_Bat_Time > CHECKBATISLOW*60*100)
 	{
-		Sys_run.Check_Bat_Time = 0;
-		ADC_filter();
+//		Sys_run.Check_Bat_Time = 0;
+//		ADC_filter();
 	}
 	if((Sys_run.BTuart_Time_Enable == 1)&&(Sys_run.BTuart_Out_Run_Time > MAXBTUARTOUT /*Sys_config.OutTime_BTUART*/))
 	{
@@ -195,6 +211,7 @@ void PowerDown(void)
 	PWM_Disable();
 	PWR_IR_OFF();
 	PWR_BL_OFF();
+	PWR_EXT_OFF();
 //	PWR_485_OFF();
 //	PWR_ESAM_OFF();
 
@@ -230,23 +247,231 @@ void Set_BL_Exit(void)
 	PWR_BL_OFF();
 }
 
-
 void SendOneByte(u8 Byte)
 {
-	if(POW_IR == 0)
-	{
-		Set_IRDA_power_ON();
-	}
-	RX_FLAG = 0;
-	CountRX = 0;
-	Receive_bit = 0;
 	
+}
+void SendOneByte_56K(u8 addr,u8 Byte)
+{
+	u8 tmp;
+	if(POW_IR != POW_IR_56K)
+	{
+		Set_IRDA_power_ON_56K();
+	}
 	TX_FLAG = 1;
-	CountTX = 0;
-	Tx_Parity = 0;
-	BYTE = Byte;
-	while(TX_FLAG == 1);
-	delay_nms(1);
+	Tx_bit = 0;
+	while((CountTX <= RC199_PREAMBLE_T*2)&&(Tx_bit == 0))//发送起始位
+	{
+		if(CountTX < RC199_PREAMBLE_T)
+			{
+				TXD_high();  
+			}
+			else if((CountTX >= RC199_PREAMBLE_T)&&(CountTX < RC199_PREAMBLE_T*2))
+			{
+				TXD_low(); 				
+			}
+			else
+			{
+				CountTX = 0;				
+				Tx_bit = 1;				
+			}
+	}	
+	while((CountTX <= RC199_LOGIC_1_ALL)&&(Tx_bit > 0)&&(Tx_bit < 5))	//4位地址
+	{
+		tmp	= (addr >> (Tx_bit - 1))& 0x01;		
+		if((CountTX < RC199_LOGIC_1_H	))
+		{
+			TXD_high(); 
+		}
+		else if((tmp == 0)&&(CountTX < RC199_LOGIC_0_ALL))
+		{
+			TXD_low(); 
+		}
+		else if((tmp == 1)&&(CountTX < RC199_LOGIC_1_ALL))
+		{
+			TXD_low();
+		}
+		else
+		{
+			CountTX = 0;
+			Tx_bit++;							
+		}
+	}
+	while((CountTX <= RC199_LOGIC_1_ALL)&&(Tx_bit > 4)&&(Tx_bit < 13))//8bit数据
+	{
+		tmp	= (Byte >> (Tx_bit - 5))& 0x01;
+		if((CountTX < RC199_LOGIC_1_H))
+		{
+			TXD_high(); 
+		}
+		else if((tmp == 0)&&(CountTX < RC199_LOGIC_0_ALL))
+		{
+			TXD_low(); 
+		}
+		else if((tmp == 1)&&(CountTX < RC199_LOGIC_1_ALL))
+		{
+			TXD_low();
+		}
+		else
+		{
+			CountTX = 0;
+			Tx_bit++;							
+		}
+	}
+	while((CountTX <= RC199_LOGIC_1_ALL)&&(Tx_bit > 12)&&(Tx_bit < 17))//地址反码
+	{
+		tmp	= (~addr >> (Tx_bit - 1))& 0x01;		
+		if((CountTX < RC199_LOGIC_1_H	))
+		{
+			TXD_high(); 
+		}
+		else if((tmp == 0)&&(CountTX < RC199_LOGIC_0_ALL))
+		{
+			TXD_low(); 
+		}
+		else if((tmp == 1)&&(CountTX < RC199_LOGIC_1_ALL))
+		{
+			TXD_low();
+		}
+		else
+		{
+			CountTX = 0;
+			Tx_bit++;							
+		}
+	}
+	while((CountTX <= RC199_LOGIC_1_ALL)&&(Tx_bit > 16)&&(Tx_bit < 25))//8bit数据反码
+	{
+		tmp	= (~BYTE >> (Tx_bit - 15))& 0x01;
+		if((CountTX <= RC199_LOGIC_1_H))
+		{
+			TXD_high(); 
+		}
+		else if((tmp == 0)&&(CountTX <= RC199_LOGIC_0_ALL))
+		{
+			TXD_low(); 
+		}
+		else if((tmp == 1)&&(CountTX <= RC199_LOGIC_1_ALL))
+		{
+			TXD_low();
+		}
+		else
+		{
+			CountTX = 0;
+			Tx_bit++;							
+		}
+	}	
+}
+
+void SendOneByte_38K(u8 addr,u8 Byte)
+{
+	u8 tmp;
+	if(POW_IR != POW_IR_56K)
+	{
+		Set_IRDA_power_ON_56K();
+	}
+	TX_FLAG = 1;	
+	Tx_bit = 0;
+	while((CountTX <= (NEC_PREAMBLE_T_H+NEC_PREAMBLE_T_L))&&(Tx_bit == 0))//发送起始位
+	{
+		if(CountTX < NEC_PREAMBLE_T_H)
+			{
+				TXD_high();  
+			}
+			else if((CountTX >= NEC_PREAMBLE_T_H)&&(CountTX < (NEC_PREAMBLE_T_H+NEC_PREAMBLE_T_L)))
+			{
+				TXD_low(); 				
+			}
+			else
+			{
+				CountTX = 0;				
+				Tx_bit = 1;				
+			}
+	}	
+	while((CountTX <= NEC_LOGIC_1_ALL)&&(Tx_bit > 0)&&(Tx_bit < 5))	//4位地址
+	{
+		tmp	= (addr >> (Tx_bit - 1))& 0x01;		
+		if((CountTX < NEC_LOGIC_1_H	))
+		{
+			TXD_high(); 
+		}
+		else if((tmp == 0)&&(CountTX < NEC_LOGIC_0_ALL))
+		{
+			TXD_low(); 
+		}
+		else if((tmp == 1)&&(CountTX < NEC_LOGIC_1_ALL))
+		{
+			TXD_low();
+		}
+		else
+		{
+			CountTX = 0;
+			Tx_bit++;							
+		}
+	}
+	while((CountTX <= NEC_LOGIC_1_ALL)&&(Tx_bit > 4)&&(Tx_bit < 9))	//4位地址反码
+	{
+		tmp	= (~addr >> (Tx_bit - 5))& 0x01;		
+		if((CountTX < NEC_LOGIC_1_H	))
+		{
+			TXD_high(); 
+		}
+		else if((tmp == 0)&&(CountTX < NEC_LOGIC_0_ALL))
+		{
+			TXD_low(); 
+		}
+		else if((tmp == 1)&&(CountTX < NEC_LOGIC_1_ALL))
+		{
+			TXD_low();
+		}
+		else
+		{
+			CountTX = 0;
+			Tx_bit++;							
+		}
+	}
+	while((CountTX <= NEC_LOGIC_1_ALL)&&(Tx_bit > 8)&&(Tx_bit < 17))//8bit数据
+	{
+		tmp	= (Byte >> (Tx_bit - 8))& 0x01;
+		if((CountTX < NEC_LOGIC_1_H))
+		{
+			TXD_high(); 
+		}
+		else if((tmp == 0)&&(CountTX < NEC_LOGIC_0_ALL))
+		{
+			TXD_low(); 
+		}
+		else if((tmp == 1)&&(CountTX < NEC_LOGIC_1_ALL))
+		{
+			TXD_low();
+		}
+		else
+		{
+			CountTX = 0;
+			Tx_bit++;							
+		}
+	}
+	while((CountTX <= NEC_LOGIC_1_ALL)&&(Tx_bit > 16)&&(Tx_bit < 25))//8bit数据反码
+	{
+		tmp	= (~BYTE >> (Tx_bit - 15))& 0x01;
+		if((CountTX <= NEC_LOGIC_1_H))
+		{
+			TXD_high(); 
+		}
+		else if((tmp == 0)&&(CountTX <= NEC_LOGIC_0_ALL))
+		{
+			TXD_low(); 
+		}
+		else if((tmp == 1)&&(CountTX <= NEC_LOGIC_1_ALL))
+		{
+			TXD_low();
+		}
+		else
+		{
+			CountTX = 0;
+			Tx_bit++;							
+		}
+	}	
+	
 }
 
 void SendBytes(u8 *str,u8 len)
@@ -254,7 +479,7 @@ void SendBytes(u8 *str,u8 len)
   u16 i;
   for(i=0;i<len;i++)
   {
-  	 SendOneByte(str[i]);
+//  	 SendOneByte(str[i]);
   }
 }
 

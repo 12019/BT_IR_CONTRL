@@ -114,10 +114,6 @@
       <TargetDriverDllRegistry>
         <SetRegEntry>
           <Number>0</Number>
-          <Key>DLGUARM</Key>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
           <Key>ST-LINKIII-KEIL_SWO</Key>
           <Name>-U -O206 -S3 -C-1 -TO18 -TC10000000 -TP21 -TDS8007 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO7 -FD20000000 -FC800 -FN0</Name>
         </SetRegEntry>

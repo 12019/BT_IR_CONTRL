@@ -57,20 +57,13 @@ int main(void)
 	
  	PowerOff();
 	
-	InitQue(&RS485RxQUE);//485接收队列
-	InitQue(&IrDARxQUE);//红外接收队列
-
-	Clear_RxBuffer2();
-	Clear_RxBuffer3();
 	Sys_config.Sys_ready = SYSNOTREADY;
-	
 	
 	
 	PowerUp();//BL等待配对	
 	
 	delay_nms(100);
 	BT_STA = LEDSTA_BTLINKOFF;
-	IR_BaudRate_Time = 83;	
 	Wait_BTlink();
 	Sys_config.SleepTime = MAXTIMEBTLINKEDNODATA;
 	

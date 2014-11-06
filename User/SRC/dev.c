@@ -232,12 +232,17 @@ void GPIO_Configuration(void)
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 	GPIO_ResetBits(GPIOA, GPIO_Pin_4);
 	
-	/*Configuration PA00(LED-RUN) PA12(B_RE) as alternate push-pull */
+	/*Configuration PB00(EXT_CONTRL) as alternate push-pull */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_12;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 	GPIO_SetBits(GPIOA, GPIO_Pin_0|GPIO_Pin_12);//BL RESET HI
+	
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 ;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
 	
 	/* Configure PA06(LED1) PA07(LED2) as input floating  */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
@@ -563,6 +568,33 @@ void TIM_Configuration(void)
 	/* TIM3 enable counter */
 	TIM_Cmd(TIM3, ENABLE);	
 	}
+void TIM2_Configuration_38K(void)
+{
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+	TIM_OCInitTypeDef  TIM_OCInitStructure;
+		/* TIM2 clock enable */
+		/* ---------------------------------------------------------------
+	TIM2 Configuration: Output Compare Inactive Mode:
+	TIM2CLK = 24 MHz, Prescaler = 631, TIM2 counter clock = 38.034KHz
+	--------------------------------------------------------------- */ 	
+	/* Time base configuration */ //PA1 PWM OUT
+	TIM_TimeBaseStructure.TIM_Period = 631; //38.014K
+	TIM_TimeBaseStructure.TIM_Prescaler = 0;
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+		/* Output Compare Active Mode configuration: Channel2 */
+	// PWM1 Mode configuration: Channel2
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_Pulse = 315;	//CCR1_Val;	//50% 472
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;//TIM_OCPolarity_High ;//	//比较前(后)的电平状态
+	TIM_OC2Init(TIM2, &TIM_OCInitStructure);
+	TIM_OC2PreloadConfig(TIM2, TIM_OCPreload_Enable);
+	TIM_ARRPreloadConfig(TIM2, ENABLE);
+	// TIM2 enable counter
+  TIM_Cmd(TIM2, DISABLE);//TIM_Cmd(TIM2, ENABLE);	
+}
 
 void TIM2_Configuration_56K(void)
 {
@@ -773,21 +805,31 @@ void GetBuildTime(void)
 	BuildTime.sec = Hex2Bcd((unsigned char)sec);
 }
 
-void Set_IRDA_power_ON(void)
+void Set_IRDA_power_ON_56K(void)
 {
 //	IR_GPIO_Init();
+	TIM2_Configuration_56K();
 	PWM_Enable();
 	PWR_IR_ON();
 	TX_FLAG = 0;
 	RX_FLAG = 0;
-	POW_IR = 1;
+	POW_IR = POW_IR_56K;
+}
+void Set_IRDA_power_ON_38K(void)
+{
+	TIM2_Configuration_38K();
+	PWM_Enable();
+	PWR_IR_ON();
+	TX_FLAG = 0;
+	RX_FLAG = 0;
+	POW_IR = POW_IR_38K;	
 }
 void Set_IRDA_power_OFF(void)
 {
 //	EXTI9_5_DISABLE();
 	PWM_Disable();
 	PWR_IR_OFF();
-	POW_IR = 0;
+	POW_IR = POW_IR_OFF;
 }
 
 void Set_RS485_power_ON(void)
